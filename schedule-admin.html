@@ -4,12 +4,272 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="莉學商行">
 <meta name="theme-color" content="#1a73e8">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/common.css">
 <title>📋 排班管理 — 莉學商行</title>
+<style>
+/* ===== SUB HEADER ===== */
+.sub-header {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.wk-btn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text);
+}
+.wk-label {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.now-btn {
+  background: #e8f0fe;
+  border: none;
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 32px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--primary);
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.save-btn {
+  background: var(--warn);
+  border: none;
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 32px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #7c4a00;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.save-btn:disabled { background: #e2e8f0; color: var(--text-muted); cursor: not-allowed; }
+
+/* ===== PUBLISH BUTTON ===== */
+.pub-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 30px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.pub-btn.unpublished { background: rgba(255,255,255,0.2); color: white; }
+.pub-btn.published   { background: rgba(52,168,83,0.3);  color: #c8ffd4; }
+
+/* ===== SCHEDULE TABLE ===== */
+.sched-container {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.sched-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+.sched-table th,
+.sched-table td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sched-table th:first-child,
+.sched-table td:first-child { border-left: 1px solid var(--border); }
+.sched-table tr:first-child th { border-top: 1px solid var(--border); }
+
+.name-col {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  width: 68px;
+  min-width: 68px;
+}
+.sched-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  padding: 7px 2px;
+  white-space: nowrap;
+}
+.sched-table thead .name-col { z-index: 4; background: var(--primary-dark); font-size: 12px; padding: 7px 6px; }
+.today-head { background: #1565c0 !important; }
+.today-td   { background: #f0f7ff; }
+
+.emp-cell { padding: 6px 6px; font-size: 12px; font-weight: 800; line-height: 1.3; }
+.emp-cell-role { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+
+.sched-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  width: 80px;
+  min-width: 80px;
+  cursor: pointer;
+  padding: 4px 2px;
+  gap: 1px;
+  user-select: none;
+}
+.sched-cell:active { opacity: 0.65; }
+.sched-cell.locked { cursor: default; }
+.sched-cell.dirty  { background: #fffbeb; }
+.s-shift { font-size: 12px; font-weight: 800; }
+.s-meta  { font-size: 10px; color: var(--text-muted); }
+.s-note  { font-size: 10px; color: var(--text-muted); max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-ot    { color: var(--danger); font-weight: 800; }
+
+.note-name-cell { padding: 6px 6px; font-size: 11px; font-weight: 700; color: var(--text-muted); }
+.note-cell-input {
+  display: block;
+  border: none;
+  width: 80px;
+  min-width: 80px;
+  padding: 4px 3px;
+  font-size: 11px;
+  text-align: center;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  min-height: 54px;
+}
+.note-cell-input:focus { outline: none; background: #f8fafc; color: var(--text); }
+
+.locked-bar {
+  background: #fff8e1;
+  border-top: 1px solid #ffe082;
+  text-align: center;
+  padding: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c4a00;
+  flex-shrink: 0;
+}
+
+/* ===== SHIFT PICKER ===== */
+.picker-head   { margin-bottom: 12px; }
+.picker-who    { font-size: 18px; font-weight: 900; }
+.picker-when   { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.picker-cur    { font-size: 12px; color: var(--primary); margin-top: 4px; font-weight: 700; }
+.section-lbl   { font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin: 12px 0 7px; }
+.shift-grid    { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.sp-btn {
+  padding: 10px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.sp-btn.work-sel  { border-color: var(--primary); background: #e8f0fe; color: var(--primary); }
+.sp-btn.off-sel   { border-color: var(--accent);  background: #e8f5e9; color: var(--accent); }
+.sp-btn.night-sel { border-color: var(--night);   background: #fff3e0; color: var(--night); }
+.sp-btn.night-col { color: var(--night); }
+.sp-btn.off-col   { color: var(--text-muted); }
+
+.ot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 10px 0 8px;
+}
+.ot-toggle {
+  width: 40px; height: 22px;
+  border-radius: 11px;
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.ot-toggle.on { background: var(--danger); }
+.ot-toggle::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-radius: 9px;
+  background: white;
+  top: 2px; left: 2px;
+  transition: left 0.18s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.ot-toggle.on::after { left: 20px; }
+.ot-lbl  { font-size: 13px; font-weight: 700; flex: 1; }
+.hrs-row { display: flex; align-items: center; gap: 6px; }
+.hrs-input {
+  width: 66px;
+  padding: 7px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+}
+.hrs-input:focus { border-color: var(--primary); }
+.note-ta {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  resize: none;
+  height: 52px;
+  margin-bottom: 2px;
+}
+.note-ta:focus { border-color: var(--primary); }
+.picker-actions { display: flex; gap: 8px; margin-top: 12px; }
+.p-done   { flex: 1; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.p-cancel { padding: 13px 16px; background: #f1f5f9; color: var(--text); border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.p-clear  { padding: 13px 14px; background: #fce8e6; color: var(--danger); border: none; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; color: var(--text-muted); font-size: 14px; }
+</style>
 </head>
 <body>
 
@@ -19,29 +279,411 @@
 </div>
 
 <div id="appShell" hidden>
+
   <header class="top-header">
     <button class="btn-back" onclick="window.location.href='home.html'">← 首頁</button>
     <h1 class="header-title">📋 排班管理</h1>
+    <div class="header-badge" id="storeBadge"></div>
+    <button class="pub-btn unpublished" id="publishBtn">📢 發布</button>
   </header>
 
-  <div class="maintenance-wrap">
-    <div class="maintenance-icon">📋</div>
-    <h2 class="maintenance-title">功能開發中</h2>
-    <p class="maintenance-desc">此功能正在建置中，敬請期待。<br>完成後將自動上線。</p>
-    <button class="btn-primary" style="max-width:200px;" onclick="window.location.href='home.html'">返回首頁</button>
+  <div class="store-tabs" id="storeTabs" style="display:none;"></div>
+
+  <div class="sub-header">
+    <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
+    <div class="wk-label" id="weekLabel">—</div>
+    <button class="wk-btn" onclick="changeWeek(1)">›</button>
+    <button class="now-btn" onclick="goToDefaultWeek()">下週</button>
+    <button class="save-btn" id="saveBtn" disabled>已儲存</button>
+  </div>
+
+  <div class="locked-bar" id="lockedBar" style="display:none;">🔒 此週已封盤，僅能查閱</div>
+
+  <div class="sched-container" id="schedContainer">
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div style="font-size:40px;margin-bottom:10px;">👥</div>
+      <div>此門市尚無在職員工</div>
+    </div>
+    <table class="sched-table" id="schedTable"></table>
+  </div>
+
+</div>
+
+<!-- Shift Picker -->
+<div class="modal-overlay" id="shiftModal" onclick="if(event.target===this)closePicker()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="picker-head">
+      <div class="picker-who"  id="pickerWho"></div>
+      <div class="picker-when" id="pickerWhen"></div>
+      <div class="picker-cur"  id="pickerCur"></div>
+    </div>
+    <div class="section-lbl">出勤班別</div>
+    <div class="shift-grid" id="spWork"></div>
+    <div class="section-lbl">休假</div>
+    <div class="shift-grid" id="spLeave"></div>
+    <div class="ot-row" id="otRow">
+      <button class="ot-toggle" id="otToggle" onclick="toggleOT()"></button>
+      <span class="ot-lbl">加班</span>
+      <div class="hrs-row">
+        <input class="hrs-input" id="hrsInput" type="number" min="0" max="24" step="0.5" placeholder="時數">
+        <span style="font-size:12px;color:var(--text-muted);">h</span>
+      </div>
+    </div>
+    <textarea class="note-ta" id="noteTa" placeholder="備註（選填）"></textarea>
+    <div class="picker-actions">
+      <button class="p-clear"  onclick="clearCell()">清除</button>
+      <button class="p-cancel" onclick="closePicker()">取消</button>
+      <button class="p-done"   onclick="applyPicker()">確定</button>
+    </div>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script type="module">
-import { requireAuth } from './js/auth.js';
-import { hideLoading } from './js/utils.js';
-(async () => {
-  await requireAuth();
-  document.getElementById('appShell').removeAttribute('hidden');
+import { requireAuth, canSchedule, isMultiStore } from './js/auth.js';
+import {
+  getAppConfig, getStoreUsers, getWeekMeta, saveWeekMeta,
+  getAllWeekEntries, saveUserWeekSchedule, getStoreConfig,
+} from './js/db.js';
+import {
+  getCurrentWeekString, getNextWeekString, getWeekDates, getWeekMonday,
+  dateToISOWeek, DAY_NAMES, showLoading, hideLoading, showToast, isWeekLocked,
+} from './js/utils.js';
+import { getShiftHours, isLeaveShift, shiftClass } from './js/schedule-utils.js';
+
+// ===== STATE =====
+let user, appConfig = {}, shiftCfg = { shifts: [], shiftHours: {} };
+let currentStore = '', currentWeek = '';
+let employees = [];
+let scheduleData = {};    // { [uid]: { days: { [YYYY-MM-DD]: DayEntry } } }
+let savedJSON    = '{}';
+let weekNotes    = {};
+let savedNotes   = '{}';
+let weekMeta     = null;
+let dirtyUids    = new Set();
+let notesDirty   = false;
+let locked       = false;
+
+// Picker state
+let pUid = null, pDate = null, pShift = null, pOT = false;
+
+const LEAVE_TYPES = ['排休','指休','特休','補休'];
+
+// ===== BOOT =====
+user = await requireAuth();
+if (!canSchedule(user)) {
+  alert('您沒有排班管理的權限');
+  window.location.replace('home.html');
+}
+
+showLoading('載入設定中...');
+appConfig = await getAppConfig().catch(() => ({}));
+currentStore = user.store || (appConfig.stores || [])[0] || '';
+currentWeek  = getNextWeekString();
+
+initStoreTabs();
+document.getElementById('publishBtn').addEventListener('click', togglePublish);
+document.getElementById('saveBtn').addEventListener('click', saveAll);
+
+await fetchAndRender();
+hideLoading();
+document.getElementById('appShell').removeAttribute('hidden');
+
+// ===== STORE TABS =====
+function initStoreTabs() {
+  if (!isMultiStore(user)) return;
+  const bar = document.getElementById('storeTabs');
+  bar.style.display = 'flex';
+  bar.innerHTML = (appConfig.stores || []).map(s =>
+    `<button class="store-tab${s===currentStore?' active':''}" onclick="switchStore('${s}')">${s}</button>`
+  ).join('');
+}
+window.switchStore = async s => {
+  if (!await confirmUnsaved()) return;
+  currentStore = s;
+  document.querySelectorAll('.store-tab').forEach(b => b.classList.toggle('active', b.textContent === s));
+  await fetchAndRender();
+};
+
+// ===== FETCH =====
+async function fetchAndRender() {
+  showLoading('讀取班表...');
+  try {
+    const [emps, entries, meta, cfg] = await Promise.all([
+      getStoreUsers(currentStore),
+      getAllWeekEntries(currentStore, currentWeek),
+      getWeekMeta(currentStore, currentWeek),
+      getStoreConfig(currentStore, 'shifts'),
+    ]);
+
+    employees = emps.sort((a,b) => (a.sortKey||99)-(b.sortKey||99));
+    shiftCfg  = cfg || { shifts: appConfig.shifts||[], shiftHours: appConfig.shiftHours||{} };
+    weekMeta  = meta || { published: false };
+    weekNotes = { ...(weekMeta.notes||{}) };
+    savedNotes = JSON.stringify(weekNotes);
+
+    // Build scheduleData from entries
+    scheduleData = {};
+    employees.forEach(e => { scheduleData[e.uid] = { days:{} }; });
+    entries.forEach(e => { if (scheduleData[e.uid]) scheduleData[e.uid] = { days: e.days||{} }; });
+    savedJSON = JSON.stringify(scheduleData);
+    dirtyUids.clear();
+    notesDirty = false;
+
+    locked = isWeekLocked(currentWeek) && currentWeek < getCurrentWeekString();
+
+    renderWeekLabel();
+    renderPublishBtn();
+    renderTable();
+    updateSaveBtn();
+    document.getElementById('lockedBar').style.display = locked ? 'block' : 'none';
+  } catch(e) {
+    showToast('❌ 讀取失敗：' + e.message);
+    console.error(e);
+  }
   hideLoading();
-})();
+}
+
+// ===== RENDER =====
+function renderWeekLabel() {
+  const dates = getWeekDates(currentWeek);
+  const [,w] = currentWeek.split('-W');
+  const fmt = d => { const[,m,day]=d.split('-'); return `${+m}/${+day}`; };
+  document.getElementById('weekLabel').textContent  = `第${w}週 ${fmt(dates[0])}–${fmt(dates[6])}`;
+  document.getElementById('storeBadge').textContent = currentStore;
+}
+
+function renderPublishBtn() {
+  const btn = document.getElementById('publishBtn');
+  if (weekMeta?.published) {
+    btn.textContent = '✅ 已發布';
+    btn.className   = 'pub-btn published';
+  } else {
+    btn.textContent = '📢 發布';
+    btn.className   = 'pub-btn unpublished';
+  }
+}
+
+function renderTable() {
+  const table = document.getElementById('schedTable');
+  const empty = document.getElementById('emptyState');
+  if (!employees.length) { table.innerHTML=''; empty.style.display='flex'; return; }
+  empty.style.display = 'none';
+
+  const dates   = getWeekDates(currentWeek);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const fmt = d => { const[,m,day]=d.split('-'); return `${+m}/${+day}`; };
+
+  // thead
+  let html = '<thead><tr>';
+  html += `<th class="name-col">員工</th>`;
+  dates.forEach((d,i) => {
+    const isT = d===todayStr;
+    html += `<th${isT?' class="today-head"':''} style="min-width:80px;">${DAY_NAMES[i]}<br>${fmt(d)}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  // employee rows
+  employees.forEach(emp => {
+    const name  = emp.empName || emp.empId || '—';
+    const entry = scheduleData[emp.uid] || { days:{} };
+    html += `<tr>`;
+    html += `<td class="name-col"><div class="emp-cell">${name}<div class="emp-cell-role">${emp.role||''}</div></div></td>`;
+    dates.forEach(d => {
+      const isT   = d === todayStr;
+      const day   = entry.days[d] || {};
+      const shift = day.shift || '';
+      const hours = day.hours ?? (shift && !isLeaveShift(shift) ? getShiftHours(shift, shiftCfg.shiftHours) : 0);
+      const isDirty = dirtyUids.has(emp.uid);
+      const cls = ['sched-cell', isT?'today-td':'', isDirty?'dirty':'', locked?'locked':''].filter(Boolean).join(' ');
+      const click = locked ? '' : `onclick="openPicker('${emp.uid}','${d}')"`;
+      const sc = shiftClass(shift);
+
+      html += `<td${isT?' class="today-td"':''}>
+        <div class="${cls}" data-uid="${emp.uid}" data-date="${d}" ${click}>
+          <span class="s-shift ${sc}">${shift||'—'}</span>
+          ${shift && !isLeaveShift(shift) && hours ? `<span class="s-meta">${hours}h${day.isOT?' <span class="s-ot">OT</span>':''}</span>` : ''}
+          ${day.note ? `<span class="s-note">${day.note}</span>` : ''}
+        </div>
+      </td>`;
+    });
+    html += '</tr>';
+  });
+
+  // notes row
+  html += `<tr><td class="name-col"><div class="note-name-cell">備註</div></td>`;
+  dates.forEach(d => {
+    const isT = d===todayStr;
+    const val = (weekNotes[d]||'').replace(/"/g,'&quot;');
+    html += `<td${isT?' class="today-td"':''}><input class="note-cell-input" data-date="${d}" value="${val}" placeholder="—" ${locked?'readonly':''} oninput="onNoteInput(this,'${d}')"></td>`;
+  });
+  html += '</tr></tbody>';
+  table.innerHTML = html;
+}
+
+function updateSaveBtn() {
+  const btn = document.getElementById('saveBtn');
+  const n   = dirtyUids.size + (notesDirty?1:0);
+  btn.disabled    = n === 0;
+  btn.textContent = n ? `儲存 (${n})` : '已儲存';
+}
+
+// ===== CELL EDIT =====
+window.openPicker = (uid, dateStr) => {
+  pUid = uid; pDate = dateStr;
+  const emp   = employees.find(e=>e.uid===uid);
+  const day   = (scheduleData[uid]?.days||{})[dateStr] || {};
+  pShift = day.shift || '';
+  pOT    = day.isOT  || false;
+
+  const [,m,d] = dateStr.split('-');
+  const di = getWeekDates(currentWeek).indexOf(dateStr);
+  document.getElementById('pickerWho').textContent  = emp?.empName || '—';
+  document.getElementById('pickerWhen').textContent = `${DAY_NAMES[di]}・${+m}/${+d}`;
+  document.getElementById('pickerCur').textContent  = pShift ? `目前班別：${pShift}` : '目前：（未排班）';
+
+  const defH = pShift ? getShiftHours(pShift, shiftCfg.shiftHours) : '';
+  document.getElementById('hrsInput').value = day.hours ?? (defH||'');
+  document.getElementById('noteTa').value   = day.note || '';
+  updateOTToggleUI();
+  buildPickerBtns(pShift);
+  document.getElementById('shiftModal').classList.add('active');
+};
+
+function buildPickerBtns(sel) {
+  const shifts = (shiftCfg.shifts||[]).filter(s=>!isLeaveShift(s));
+  document.getElementById('spWork').innerHTML = shifts.map(s => {
+    const isNight = s.includes('23')||s.includes('夜');
+    const selCls  = s===sel ? (isNight?'night-sel':'work-sel') : (isNight?'night-col':'');
+    return `<button class="sp-btn ${selCls}" onclick="pickShift('${s}')">${s}</button>`;
+  }).join('');
+  document.getElementById('spLeave').innerHTML = LEAVE_TYPES.map(s => {
+    const selCls = s===sel ? 'off-sel' : 'off-col';
+    return `<button class="sp-btn ${selCls}" onclick="pickShift('${s}')">${s}</button>`;
+  }).join('');
+  document.getElementById('otRow').style.display = isLeaveShift(sel) ? 'none' : 'flex';
+}
+
+window.pickShift = s => {
+  pShift = s;
+  if (isLeaveShift(s)) { pOT=false; updateOTToggleUI(); }
+  buildPickerBtns(s);
+  document.getElementById('pickerCur').textContent = `已選：${s}`;
+  const h = getShiftHours(s, shiftCfg.shiftHours);
+  if (!isLeaveShift(s) && h) document.getElementById('hrsInput').value = h;
+  else document.getElementById('hrsInput').value = '';
+};
+
+window.toggleOT = () => { pOT=!pOT; updateOTToggleUI(); };
+function updateOTToggleUI() { document.getElementById('otToggle').classList.toggle('on', pOT); }
+
+window.clearCell  = () => { commitEntry({ shift:'', hours:0, note:'', isOT:false }); closePicker(); };
+window.applyPicker = () => {
+  const shift = pShift || '';
+  const leave = isLeaveShift(shift);
+  const hours = parseFloat(document.getElementById('hrsInput').value) || (shift?getShiftHours(shift,shiftCfg.shiftHours):0);
+  const note  = document.getElementById('noteTa').value.trim();
+  commitEntry({ shift, hours: leave?0:hours, note, isOT: leave?false:pOT });
+  closePicker();
+};
+
+function commitEntry(entry) {
+  if (!scheduleData[pUid]) scheduleData[pUid] = { days:{} };
+  if (!entry.shift) delete scheduleData[pUid].days[pDate];
+  else scheduleData[pUid].days[pDate] = entry;
+  dirtyUids.add(pUid);
+  updateSaveBtn();
+  // Re-render only this cell
+  const cell = document.querySelector(`.sched-cell[data-uid="${pUid}"][data-date="${pDate}"]`);
+  if (cell) {
+    const s = entry.shift||'';
+    const sc = shiftClass(s);
+    const h  = entry.hours||0;
+    cell.innerHTML = `
+      <span class="s-shift ${sc}">${s||'—'}</span>
+      ${s&&!isLeaveShift(s)&&h?`<span class="s-meta">${h}h${entry.isOT?' <span class="s-ot">OT</span>':''}</span>`:''}
+      ${entry.note?`<span class="s-note">${entry.note}</span>`:''}`;
+    cell.classList.add('dirty');
+  }
+}
+
+window.closePicker = () => {
+  document.getElementById('shiftModal').classList.remove('active');
+  pUid=pDate=pShift=null; pOT=false;
+};
+
+window.onNoteInput = (input, dateStr) => {
+  weekNotes[dateStr] = input.value;
+  notesDirty = JSON.stringify(weekNotes) !== savedNotes;
+  updateSaveBtn();
+};
+
+// ===== SAVE =====
+async function saveAll() {
+  if (!dirtyUids.size && !notesDirty) return;
+  const btn = document.getElementById('saveBtn');
+  btn.disabled=true; btn.textContent='儲存中...';
+  try {
+    const ops = [...dirtyUids].map(uid =>
+      saveUserWeekSchedule(currentStore, currentWeek, uid, scheduleData[uid])
+    );
+    if (notesDirty) ops.push(saveWeekMeta(currentStore, currentWeek, { notes: weekNotes }));
+    await Promise.all(ops);
+    savedJSON  = JSON.stringify(scheduleData);
+    savedNotes = JSON.stringify(weekNotes);
+    dirtyUids.clear(); notesDirty=false;
+    updateSaveBtn();
+    showToast('✅ 儲存成功');
+    document.querySelectorAll('.sched-cell.dirty').forEach(el=>el.classList.remove('dirty'));
+  } catch(e) {
+    showToast('❌ 儲存失敗：'+e.message);
+    updateSaveBtn();
+  }
+}
+
+// ===== PUBLISH =====
+async function togglePublish() {
+  if (dirtyUids.size||notesDirty) {
+    if (!confirm('有未儲存的修改，請先儲存再發布。要立即儲存嗎？')) return;
+    await saveAll();
+  }
+  const next = !weekMeta.published;
+  const msg  = next ? '確定要發布此週班表？員工將可以查看。' : '確定要取消發布？員工將無法查看此週班表。';
+  if (!confirm(msg)) return;
+  try {
+    const now = new Date().toISOString();
+    await saveWeekMeta(currentStore, currentWeek, {
+      published:   next,
+      publishedAt: next ? now : null,
+      publishedBy: next ? (user.empName||user.empId) : '',
+    });
+    weekMeta.published = next;
+    renderPublishBtn();
+    showToast(next ? '✅ 班表已發布！' : '班表已取消發布');
+  } catch(e) { showToast('❌ 操作失敗：'+e.message); }
+}
+
+// ===== WEEK NAV =====
+async function confirmUnsaved() {
+  if (!dirtyUids.size && !notesDirty) return true;
+  return confirm('有未儲存的修改，切換後將會遺失。確定繼續嗎？');
+}
+
+window.changeWeek = async delta => {
+  if (!await confirmUnsaved()) return;
+  const mon = getWeekMonday(currentWeek);
+  mon.setDate(mon.getDate() + delta*7);
+  currentWeek = dateToISOWeek(mon);
+  await fetchAndRender();
+};
+
+window.goToDefaultWeek = async () => {
+  if (!await confirmUnsaved()) return;
+  currentWeek = getNextWeekString();
+  await fetchAndRender();
+};
 </script>
 </body>
 </html>
