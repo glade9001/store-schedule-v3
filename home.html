@@ -65,6 +65,58 @@
   flex-shrink: 0;
 }
 
+/* Header 設定按鈕 */
+.btn-header-icon {
+  background: rgba(255,255,255,0.18);
+  border: none;
+  color: white;
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.btn-header-icon:active { background: rgba(255,255,255,0.35); }
+
+/* Bottom Sheet */
+.bs-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9500;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.bs-overlay.active { opacity: 1; pointer-events: all; }
+.bs-sheet {
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%; max-width: 520px;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  z-index: 9600;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.bs-sheet.active { transform: translateX(-50%) translateY(0); }
+.bs-handle { width: 36px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 12px auto 16px; }
+.bs-title { font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; padding: 0 20px 10px; text-transform: uppercase; }
+.bs-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; cursor: pointer;
+  transition: background 0.1s;
+  border-top: 1px solid var(--border);
+}
+.bs-item:active { background: #f8fafc; }
+.bs-item-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.bs-item-text { flex: 1; }
+.bs-item-label { font-size: 15px; font-weight: 700; }
+.bs-item-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.bs-item-arrow { color: var(--text-muted); font-size: 16px; }
+
 /* 問候橫幅 */
 .greeting-banner {
   background: linear-gradient(135deg, #1a73e8, #0d47a1);
@@ -286,7 +338,7 @@
         <div class="home-user-sub" id="headerSub">—</div>
       </div>
       <div class="home-store-badge" id="headerStore">—</div>
-      <button class="btn-logout" id="logoutBtn">登出</button>
+      <button class="btn-header-icon" onclick="window.location.href='settings.html'" title="帳號設定">⚙️</button>
     </div>
   </div>
 
@@ -362,6 +414,7 @@
     </div>
     <button class="btn-primary" onclick="window.location.href='settings.html'">⚙️ 帳號設定</button>
     <button class="btn-secondary" id="rolePreviewEntryBtn" style="margin-top:8px;display:none;" onclick="closeModal('profileModal');openModal('rolePreviewModal')">🎭 角色預覽</button>
+    <button class="btn-secondary" style="margin-top:8px;color:var(--danger);" id="logoutBtn">🚪 登出</button>
     <button class="btn-secondary" style="margin-top:8px;" onclick="closeModal('profileModal')">關閉</button>
   </div>
 </div>
@@ -398,6 +451,46 @@
     <button class="btn-secondary" id="exitPreviewBtn" style="margin-top:8px;display:none;" onclick="exitPreview();closeModal('rolePreviewModal')">↩ 恢復真實身份</button>
     <button class="btn-secondary" style="margin-top:8px;" onclick="closeModal('rolePreviewModal')">取消</button>
   </div>
+</div>
+
+<!-- 更多管理 Bottom Sheet -->
+<div class="bs-overlay" id="moreMgmtOverlay" onclick="closeMoreMgmt()"></div>
+<div class="bs-sheet" id="moreMgmtSheet">
+  <div class="bs-handle"></div>
+  <div class="bs-title">更多管理功能</div>
+  <div class="bs-item" onclick="closeMoreMgmt();window.location.href='leave.html'">
+    <div class="bs-item-icon" style="background:#e8f5e9;">🌿</div>
+    <div class="bs-item-text">
+      <div class="bs-item-label">特補休管理</div>
+      <div class="bs-item-sub">假別管理、紀錄查詢</div>
+    </div>
+    <div class="bs-item-arrow">›</div>
+  </div>
+  <div class="bs-item" onclick="closeMoreMgmt();window.location.href='employee.html'">
+    <div class="bs-item-icon" style="background:#f3e8ff;">👥</div>
+    <div class="bs-item-text">
+      <div class="bs-item-label">員工管理</div>
+      <div class="bs-item-sub">帳號、職位、調店、離職</div>
+    </div>
+    <div class="bs-item-arrow">›</div>
+  </div>
+  <div class="bs-item" onclick="closeMoreMgmt();window.location.href='analytics.html'">
+    <div class="bs-item-icon" style="background:#e8f0fe;">📊</div>
+    <div class="bs-item-text">
+      <div class="bs-item-label">分析報表</div>
+      <div class="bs-item-sub">出勤、工時統計</div>
+    </div>
+    <div class="bs-item-arrow">›</div>
+  </div>
+  <div class="bs-item" onclick="closeMoreMgmt();window.location.href='export.html'">
+    <div class="bs-item-icon" style="background:#f1f3f4;">📤</div>
+    <div class="bs-item-text">
+      <div class="bs-item-label">匯出報表</div>
+      <div class="bs-item-sub">匯出班表、薪資資料</div>
+    </div>
+    <div class="bs-item-arrow">›</div>
+  </div>
+  <div style="height:16px;"></div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -482,26 +575,25 @@ function initGreeting() {
 
 // ===== 功能按鈕 =====
 function renderQuickGrid() {
+  // 個人功能固定 3 格
   const personal = [
     { icon:'📅', label:'班表查閱', href:'schedule.html',      color:'blue'   },
-    { icon:'🏖️', label:'劃休申請', href:'leave-request.html', color:'green'  },
+    { icon:'🏖️', label:'劃休申請', href:'leave-request.html', color:'purple' },
     { icon:'💰', label:'我的薪資', href:'my-salary.html',     color:'orange' },
-    { icon:'✅', label:'代辦事項', href:'todo.html',           color:'gray'   },
-    { icon:'⚙️', label:'帳號設定', href:'settings.html',      color:'gray'   },
   ];
 
   const eu = effectiveUser();
-  const mgmt = [
-    { icon:'📋', label:'排班管理',   href:'schedule-admin.html', perm: canSchedule,        color:'blue'   },
-    { icon:'💵', label:'薪資管理',   href:'salary.html',          perm: canViewAllSalary,   color:'orange' },
-    { icon:'🌿', label:'特補休管理', href:'leave.html',            perm: canManageEmployee,  color:'green'  },
-    { icon:'👥', label:'員工管理',   href:'employee.html',        perm: canManageEmployee,  color:'purple' },
-    { icon:'📊', label:'分析報表',   href:'analytics.html',       perm: canManageEmployee,  color:'purple' },
-    { icon:'📤', label:'匯出報表',   href:'export.html',          perm: canManageEmployee,  color:'gray'   },
-  ].filter(item => item.perm(eu));
+  const hasMgmt = canSchedule(eu);
+
+  // 管理功能固定 3 格（有權限才顯示）
+  const mgmt = hasMgmt ? [
+    { icon:'📋', label:'排班管理', href:'schedule-admin.html', color:'blue'   },
+    { icon:'💵', label:'薪資管理', href:'salary.html',         color:'orange' },
+    { icon:'⋯',  label:'更多管理', href:'#',                   color:'gray', onclick:'openMoreMgmt();return false;' },
+  ] : [];
 
   const makeBtn = item => `
-    <a class="func-btn ${item.color}" href="${item.href}">
+    <a class="func-btn ${item.color}" href="${item.href}" ${item.onclick ? `onclick="${item.onclick}"` : ''}>
       <span class="func-icon">${item.icon}</span>
       <span class="func-label">${item.label}</span>
     </a>`;
@@ -515,6 +607,16 @@ function renderQuickGrid() {
     document.getElementById('funcMgmtWrap').style.display = 'none';
   }
 }
+
+// ===== 更多管理 Bottom Sheet =====
+window.openMoreMgmt  = () => {
+  document.getElementById('moreMgmtSheet').classList.add('active');
+  document.getElementById('moreMgmtOverlay').classList.add('active');
+};
+window.closeMoreMgmt = () => {
+  document.getElementById('moreMgmtSheet').classList.remove('active');
+  document.getElementById('moreMgmtOverlay').classList.remove('active');
+};
 
 // ===== 下週發布狀態即時監聽 =====
 function subscribeNextWeek() {
@@ -764,6 +866,7 @@ window.exitPreview = () => {
 
 // ===== 登出 =====
 document.getElementById('logoutBtn').addEventListener('click', async () => {
+  closeModal('profileModal');
   if (!confirm('確定要登出嗎？')) return;
   await logout();
   window.location.replace('login.html');
