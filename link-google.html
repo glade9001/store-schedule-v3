@@ -197,7 +197,10 @@ body { overflow-y: auto; height: auto; }
         建議修改管理員設定的初始密碼，<br>
         以確保帳號安全。
       </div>
-      <div class="success-row">✅ Google 帳號已綁定</div>
+      <div class="success-row">
+        <span>✅ Google 帳號已綁定</span>
+        <span id="linkedEmail" style="font-size:11px;font-weight:600;color:#2e7d32;margin-left:auto;word-break:break-all;"></span>
+      </div>
       <label class="form-label">新密碼（至少 6 碼）</label>
       <input class="form-input" id="newPw" type="password" placeholder="輸入新密碼" autocomplete="new-password">
       <label class="form-label">確認新密碼</label>
@@ -216,6 +219,7 @@ body { overflow-y: auto; height: auto; }
 import { requireAuth, linkGoogle } from './js/auth.js';
 import { updateUserProfile } from './js/db.js';
 import { hideLoading, showToast } from './js/utils.js';
+import { auth } from './js/firebase-config.js';
 
 let user;
 
@@ -238,13 +242,17 @@ window.doLinkGoogle = async () => {
 
   try {
     await linkGoogle();
+    // 取得綁定的 Google email
+    const googleProvider = auth.currentUser?.providerData?.find(p => p.providerId === 'google.com');
+    const googleEmail = googleProvider?.email || '';
     // 更新 Firestore
-    await updateUserProfile(user.uid, { googleLinked: true });
+    await updateUserProfile(user.uid, { googleLinked: true, googleEmail });
     // 進入 Step 2
     document.getElementById('dot1').classList.replace('active', 'done');
     document.getElementById('dot2').classList.add('active');
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = '';
+    document.getElementById('linkedEmail').textContent = googleEmail;
   } catch (e) {
     btn.disabled = false;
     btn.innerHTML = `<svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>綁定 Google 帳號`;
