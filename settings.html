@@ -631,7 +631,7 @@ window.selectShiftStore = async id => {
   await loadShiftConfig();
 };
 
-window.loadShiftConfig = async () => {
+async function loadShiftConfig() {
   if (!currentShiftStore) return;
   const data = await getStoreConfig(currentShiftStore, 'shifts');
   shiftConfig = {
@@ -643,7 +643,8 @@ window.loadShiftConfig = async () => {
   renderShiftTags();
   renderNoteTags();
   renderQuota();
-};
+}
+window.loadShiftConfig = loadShiftConfig;
 
 function renderShiftTags() {
   const wrap = document.getElementById('shiftTagsWrap');
