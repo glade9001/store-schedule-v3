@@ -89,8 +89,9 @@ export async function createAuthUser(empId, initialPassword) {
 
 // ===== 每頁進入點：確認登入狀態 =====
 // 用法：const user = await requireAuth();
-// 未登入 → 跳轉 login.html，Promise 永遠不 resolve
-export function requireAuth(loginUrl = 'login.html') {
+// 未登入 → 跳轉 login.html；未綁定 Google → 跳轉 link-google.html
+// link-google.html 本身傳入 { requireGoogle: false } 避免無限跳轉
+export function requireAuth(loginUrl = 'login.html', { requireGoogle = true } = {}) {
   return new Promise(resolve => {
     const unsub = onAuthStateChanged(auth, async fbUser => {
       unsub();
@@ -100,7 +101,6 @@ export function requireAuth(loginUrl = 'login.html') {
       }
       const profile = await loadProfile(fbUser.uid);
       if (!profile) {
-        // Firestore 找不到使用者資料 → 視為未完成設定，登出
         await signOut(auth);
         window.location.replace(loginUrl);
         return;
@@ -109,6 +109,15 @@ export function requireAuth(loginUrl = 'login.html') {
         await signOut(auth);
         window.location.replace(loginUrl + '?reason=resigned');
         return;
+      }
+      // 尚未綁定 Google → 強制綁定
+      if (requireGoogle) {
+        const googleLinked = fbUser.providerData.some(p => p.providerId === 'google.com');
+        if (!googleLinked) {
+          currentUser = profile;
+          window.location.replace('link-google.html');
+          return;
+        }
       }
       currentUser = profile;
       resolve(profile);
