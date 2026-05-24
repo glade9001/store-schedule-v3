@@ -43,14 +43,12 @@ export async function loginWithGoogle() {
   const cred = await signInWithPopup(auth, provider);
   const profile = await loadProfile(cred.user.uid);
   if (!profile) {
-    // Google 帳號尚未綁定任何員工工號，登出並丟錯
-    await signOut(auth);
+    // 呼叫方負責 signOut，避免 onAuthStateChanged 競爭
     const err = new Error('此 Google 帳號尚未綁定任何員工工號，請先用工號登入後至「設定」頁綁定');
     err.code = 'not-linked';
     throw err;
   }
   if (profile.status === '離職') {
-    await signOut(auth);
     const err = new Error('此帳號已離職，無法登入');
     err.code = 'resigned';
     throw err;

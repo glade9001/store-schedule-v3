@@ -129,10 +129,15 @@ body { overflow-y: auto; height: auto; }
 import { auth } from './js/firebase-config.js';
 import { login, loginWithGoogle } from './js/auth.js';
 import { hideLoading, showToast } from './js/utils.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+// Google 登入進行中時，暫停 onAuthStateChanged 的自動跳轉
+// 避免 signInWithPopup 成功但還沒查 Firestore 時就跳走
+let authPaused = false;
 
 // 已登入 → 直接跳首頁
 onAuthStateChanged(auth, fbUser => {
+  if (authPaused) return;
   if (fbUser) {
     window.location.replace('home.html');
     return;
@@ -172,25 +177,30 @@ document.getElementById('loginBtn').addEventListener('click', doLogin);
 // Google 登入
 document.getElementById('googleBtn').addEventListener('click', doGoogleLogin);
 
+const GOOGLE_SVG = `<svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>使用 Google 帳號登入`;
+
 async function doGoogleLogin() {
-  const errEl  = document.getElementById('loginError');
-  const btn    = document.getElementById('googleBtn');
+  const errEl    = document.getElementById('loginError');
+  const btn      = document.getElementById('googleBtn');
   const loginBtn = document.getElementById('loginBtn');
   errEl.textContent = '';
+  authPaused = true;   // 暫停 onAuthStateChanged 自動跳轉
   btn.disabled = true;
   loginBtn.disabled = true;
   btn.textContent = '登入中...';
-  document.getElementById('loadingOverlay').classList.remove('hidden');
-  document.getElementById('loadingText').textContent = '驗證 Google 帳號中...';
 
   try {
     await loginWithGoogle();
-    // onAuthStateChanged 觸發跳轉
+    // 成功：恢復監聽器並手動跳轉
+    authPaused = false;
+    window.location.replace('home.html');
   } catch (e) {
-    hideLoading();
+    // 失敗：先登出（防止殘留 Google session），再恢復 UI
+    try { await signOut(auth); } catch (_) {}
+    authPaused = false;
     btn.disabled = false;
     loginBtn.disabled = false;
-    btn.innerHTML = `<svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>使用 Google 帳號登入`;
+    btn.innerHTML = GOOGLE_SVG;
     const code = e.code || '';
     if (code === 'not-linked') {
       errEl.textContent = '❌ 此 Google 帳號尚未綁定工號，請先用工號登入';
