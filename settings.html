@@ -7,10 +7,318 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="莉學商行">
-<meta name="theme-color" content="#1a73e8">
+<meta name="theme-color" content="#0284c7">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/common.css">
-<title>⚙️ 帳號設定 — 莉學商行</title>
+<title>設定 — 莉學商行</title>
+<style>
+body { overflow-y: auto; height: auto; }
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #0284c7, #075985);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.page-header .back-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 20px;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.page-header h1 { font-size: 18px; font-weight: 800; margin: 0; }
+
+.content {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.card-row:last-child { border-bottom: none; }
+
+.row-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.row-icon.blue   { background: #e0f2fe; }
+.row-icon.green  { background: #dcfce7; }
+.row-icon.red    { background: #fee2e2; }
+.row-icon.purple { background: #f3e8ff; }
+.row-icon.orange { background: #fff7ed; }
+
+.row-body { flex: 1; min-width: 0; }
+.row-label { font-size: 14px; font-weight: 700; color: var(--text); }
+.row-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; word-break: break-all; }
+
+.row-action { flex-shrink: 0; }
+
+.btn-sm {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-sm.primary { background: var(--primary); color: white; }
+.btn-sm.danger  { background: var(--danger); color: white; }
+.btn-sm.outline { background: white; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-sm.gray    { background: #f1f5f9; color: var(--text-muted); border: 1.5px solid var(--border); }
+.btn-sm:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.expand-section {
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  display: none;
+}
+.expand-section.open { display: block; }
+
+.form-row { margin-bottom: 12px; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+.form-input {
+  width: 100%;
+  height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.form-input:focus { border-color: var(--primary); }
+.err-msg {
+  font-size: 12px;
+  color: var(--danger);
+  font-weight: 600;
+  min-height: 16px;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+/* shift tags */
+.tag-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+}
+.shift-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #e0f2fe;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #075985;
+}
+.shift-tag.leave-type  { background: #f0fdf4; color: #166534; }
+.tag-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1;
+  padding: 0;
+}
+.note-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.add-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 14px;
+}
+.add-input {
+  flex: 1;
+  height: 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.add-input:focus { border-color: var(--primary); }
+.add-input.sm { width: 72px; flex: none; }
+
+/* store selector tabs */
+.store-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.store-sel-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text-muted);
+}
+.store-sel-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* quota grid */
+.quota-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.quota-item label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.quota-item input {
+  width: 100%;
+  height: 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.quota-item input:focus { border-color: var(--primary); }
+
+/* holiday */
+.year-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.year-tab {
+  padding: 7px 18px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text-muted);
+}
+.year-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.holiday-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.holiday-item:last-child { border-bottom: none; }
+.holiday-date { font-size: 13px; font-weight: 700; color: var(--primary); min-width: 90px; }
+.holiday-name { flex: 1; font-size: 14px; color: var(--text); }
+.holiday-del  {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 18px; padding: 2px 4px;
+}
+.holiday-del:hover { color: var(--danger); }
+
+/* store list */
+.store-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.store-item:last-child { border-bottom: none; }
+.store-name  { flex: 1; font-size: 14px; font-weight: 700; }
+.store-id    { font-size: 12px; color: var(--text-muted); margin-right: 8px; }
+
+.save-bar {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.subsection-hd {
+  padding: 12px 16px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+.subsection-hd:first-child { border-top: none; }
+</style>
 </head>
 <body>
 
@@ -19,30 +327,509 @@
   <div id="loadingText">載入中...</div>
 </div>
 
-<div id="appShell" hidden>
-  <header class="top-header">
-    <button class="btn-back" onclick="window.location.href='home.html'">← 首頁</button>
-    <h1 class="header-title">⚙️ 帳號設定</h1>
-  </header>
+<div id="pageWrap" style="display:none;">
 
-  <div class="maintenance-wrap">
-    <div class="maintenance-icon">⚙️</div>
-    <h2 class="maintenance-title">功能開發中</h2>
-    <p class="maintenance-desc">此功能正在建置中，敬請期待。<br>完成後將自動上線。</p>
-    <button class="btn-primary" style="max-width:200px;" onclick="window.location.href='home.html'">返回首頁</button>
+  <div class="page-header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>設定</h1>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== 帳號設定 ===== -->
+    <div>
+      <div class="section-title">帳號設定</div>
+      <div class="card">
+
+        <div class="card-row">
+          <div class="row-icon blue">👤</div>
+          <div class="row-body">
+            <div class="row-label" id="profileName">—</div>
+            <div class="row-sub" id="profileSub">—</div>
+          </div>
+        </div>
+
+        <div class="card-row">
+          <div class="row-icon green">🔗</div>
+          <div class="row-body">
+            <div class="row-label">Google 帳號</div>
+            <div class="row-sub" id="googleStatusText">讀取中...</div>
+          </div>
+          <div class="row-action">
+            <button class="btn-sm outline" id="googleActionBtn" onclick="doGoogleAction()">—</button>
+          </div>
+        </div>
+
+        <div class="card-row" style="cursor:pointer;" onclick="togglePwForm()">
+          <div class="row-icon blue">🔑</div>
+          <div class="row-body">
+            <div class="row-label">修改密碼</div>
+            <div class="row-sub">更改登入密碼</div>
+          </div>
+          <div class="row-action" style="color:var(--text-muted);font-size:20px;" id="pwChevron">›</div>
+        </div>
+
+        <div class="expand-section" id="pwForm">
+          <div class="form-row">
+            <label class="form-label">目前密碼</label>
+            <input class="form-input" id="curPw" type="password" placeholder="輸入目前密碼" autocomplete="current-password">
+          </div>
+          <div class="form-row">
+            <label class="form-label">新密碼（至少 6 碼）</label>
+            <input class="form-input" id="newPw" type="password" placeholder="輸入新密碼" autocomplete="new-password">
+          </div>
+          <div class="form-row">
+            <label class="form-label">確認新密碼</label>
+            <input class="form-input" id="confirmPw" type="password" placeholder="再次確認" autocomplete="new-password">
+          </div>
+          <div class="err-msg" id="pwErr"></div>
+          <button class="btn-sm primary" style="width:100%;" onclick="doChangePassword()">儲存密碼</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== 門市班別設定 (manager+) ===== -->
+    <div id="shiftSection" style="display:none;">
+      <div class="section-title">門市班別設定</div>
+      <div class="card">
+
+        <div id="shiftStoreSelectorWrap" style="display:none;">
+          <div class="store-selector" id="shiftStoreSelector"></div>
+        </div>
+
+        <div class="subsection-hd">班別快捷 <span style="font-weight:400;font-size:11px;">— 點 × 刪除；輸入後新增</span></div>
+        <div class="tag-area" id="shiftTagsWrap"></div>
+        <div class="add-row">
+          <input class="add-input" id="newShiftName" placeholder="班別名稱（如 9-18）" maxlength="10">
+          <input class="add-input sm" id="newShiftHours" type="number" placeholder="時數" min="0" max="24">
+          <button class="btn-sm primary" onclick="addShift()">新增</button>
+        </div>
+
+        <div class="subsection-hd">快速備註 <span style="font-weight:400;font-size:11px;">— 排班時的預設備註選項</span></div>
+        <div class="tag-area" id="noteTagsWrap"></div>
+        <div class="add-row">
+          <input class="add-input" id="newNoteText" placeholder="備註文字（如 訂鮮食）" maxlength="20">
+          <button class="btn-sm primary" onclick="addNote()">新增</button>
+        </div>
+
+        <div class="subsection-hd">年度特休額度（天）</div>
+        <div class="quota-grid">
+          <div class="quota-item"><label>未滿 6 個月</label><input type="number" id="quotaLt6" min="0" max="30"></div>
+          <div class="quota-item"><label>滿 6 個月</label><input type="number" id="quota6m" min="0" max="30"></div>
+          <div class="quota-item"><label>滿 1 年</label><input type="number" id="quota1y" min="0" max="30"></div>
+          <div class="quota-item"><label>滿 2 年</label><input type="number" id="quota2y" min="0" max="30"></div>
+          <div class="quota-item"><label>滿 3 年</label><input type="number" id="quota3y" min="0" max="30"></div>
+          <div class="quota-item"><label>滿 5 年</label><input type="number" id="quota5y" min="0" max="30"></div>
+        </div>
+
+        <div class="save-bar">
+          <button class="btn-sm gray" onclick="loadShiftConfig()">還原</button>
+          <button class="btn-sm primary" onclick="saveShiftConfig()">儲存班別設定</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== 國定假日管理 (owner+) ===== -->
+    <div id="holidaySection" style="display:none;">
+      <div class="section-title">國定假日管理</div>
+      <div class="card">
+        <div style="padding:16px;">
+
+          <div class="year-tabs" id="yearTabs"></div>
+
+          <div id="holidayList"></div>
+
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+            <input class="form-input" id="newHolidayDate" type="date" style="flex:1;min-width:120px;height:40px;">
+            <input class="form-input" id="newHolidayName" placeholder="假日名稱（如 元旦）" style="flex:1.5;min-width:120px;height:40px;">
+            <button class="btn-sm primary" onclick="addHoliday()" style="white-space:nowrap;height:40px;">新增假日</button>
+          </div>
+
+        </div>
+        <div class="save-bar">
+          <button class="btn-sm primary" onclick="saveHolidayData()">儲存假日設定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 系統基礎設定 (admin) ===== -->
+    <div id="sysSection" style="display:none;">
+      <div class="section-title">系統基礎設定</div>
+      <div class="card">
+
+        <div class="card-row" style="border-bottom:none;padding-bottom:4px;">
+          <div class="row-icon blue">🏪</div>
+          <div class="row-body">
+            <div class="row-label">門市管理</div>
+            <div class="row-sub">刪除前請確認門市內已無在職員工</div>
+          </div>
+        </div>
+
+        <div id="storeList"></div>
+
+        <div style="padding:8px 16px 16px;display:flex;gap:8px;flex-wrap:wrap;">
+          <input class="add-input" id="newStoreId" placeholder="代號（如 A）" maxlength="10" style="flex:0.8;">
+          <input class="add-input" id="newStoreName" placeholder="名稱（如 台北店）" maxlength="20" style="flex:1.5;">
+          <button class="btn-sm primary" onclick="addStore()" style="white-space:nowrap;">新增門市</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="height: 32px;"></div>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script type="module">
-import { requireAuth } from './js/auth.js';
-import { hideLoading } from './js/utils.js';
-(async () => {
-  await requireAuth();
-  document.getElementById('appShell').removeAttribute('hidden');
-  hideLoading();
-})();
+import { requireAuth, canManageEmployee, canViewAllSalary, canSysConfig, isMultiStore, linkGoogle, isGoogleLinked, changePassword } from './js/auth.js';
+import { getAppConfig, saveAppConfig, getStoreConfig, saveStoreConfig } from './js/db.js';
+import { hideLoading, showToast } from './js/utils.js';
+import { auth, db } from './js/firebase-config.js';
+import { unlink } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ===== State =====
+let user;
+let appConfig = {};
+let currentShiftStore = '';
+let shiftConfig = {};
+let holidayYear = new Date().getFullYear();
+let holidayDates = {};
+
+const LEAVE_TYPES = ['清空', '指休', '排休'];
+const DEFAULT_SHIFTS = ['7-15', '15-23', '23-07', '18-23'];
+const DEFAULT_HOURS  = { '7-15': 8, '15-23': 8, '23-07': 8, '18-23': 5 };
+const DEFAULT_NOTES  = ['作帳', '訂鮮食', '訂捷盟', '訂乳品18度C'];
+
+// ===== Init =====
+user = await requireAuth('login.html');
+
+document.getElementById('profileName').textContent = `${user.empName || user.empId}（${user.empId}）`;
+document.getElementById('profileSub').textContent  = [user.role, user.store].filter(Boolean).join(' · ') || '—';
+updateGoogleStatus();
+
+appConfig = await getAppConfig();
+const stores = appConfig.stores || [];
+
+if (canManageEmployee(user)) {
+  document.getElementById('shiftSection').style.display = '';
+  currentShiftStore = user.store || (stores[0]?.id ?? '');
+  if (isMultiStore(user) && stores.length > 1) {
+    document.getElementById('shiftStoreSelectorWrap').style.display = '';
+    renderShiftStoreSelector(stores);
+  }
+  loadShiftConfig();
+}
+
+if (canViewAllSalary(user)) {
+  document.getElementById('holidaySection').style.display = '';
+  renderYearTabs();
+  loadHolidays();
+}
+
+if (canSysConfig(user)) {
+  document.getElementById('sysSection').style.display = '';
+  renderStoreList(stores);
+}
+
+document.getElementById('pageWrap').style.display = '';
+hideLoading();
+
+// ===== 帳號 — Google =====
+function updateGoogleStatus() {
+  const linked    = isGoogleLinked();
+  const googlePd  = auth.currentUser?.providerData?.find(p => p.providerId === 'google.com');
+  const statusEl  = document.getElementById('googleStatusText');
+  const btnEl     = document.getElementById('googleActionBtn');
+  if (linked) {
+    statusEl.textContent = googlePd?.email || '已綁定';
+    btnEl.textContent    = '解除綁定';
+    btnEl.className      = 'btn-sm danger';
+  } else {
+    statusEl.textContent = '尚未綁定 Google 帳號';
+    btnEl.textContent    = '立即綁定';
+    btnEl.className      = 'btn-sm outline';
+  }
+}
+
+window.doGoogleAction = async () => {
+  const btn    = document.getElementById('googleActionBtn');
+  const linked = isGoogleLinked();
+  btn.disabled = true;
+  try {
+    if (linked) {
+      if (!confirm('確定要解除 Google 帳號綁定嗎？解除後需用工號密碼登入。')) return;
+      const googlePd = auth.currentUser?.providerData?.find(p => p.providerId === 'google.com');
+      await unlink(auth.currentUser, googlePd.providerId);
+      showToast('✅ 已解除 Google 帳號綁定');
+    } else {
+      await linkGoogle();
+      showToast('✅ Google 帳號綁定成功');
+    }
+    updateGoogleStatus();
+  } catch (e) {
+    const code = e.code || '';
+    if (!code.includes('popup-closed') && !code.includes('cancelled')) {
+      showToast('❌ ' + (e.message || '操作失敗'));
+    }
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// ===== 帳號 — 修改密碼 =====
+window.togglePwForm = () => {
+  const form    = document.getElementById('pwForm');
+  const chevron = document.getElementById('pwChevron');
+  const open    = form.classList.toggle('open');
+  chevron.textContent = open ? '⌄' : '›';
+};
+
+window.doChangePassword = async () => {
+  const cur    = document.getElementById('curPw').value;
+  const nw     = document.getElementById('newPw').value;
+  const cnf    = document.getElementById('confirmPw').value;
+  const errEl  = document.getElementById('pwErr');
+  errEl.textContent = '';
+  if (!cur)              { errEl.textContent = '⚠️ 請輸入目前密碼';    return; }
+  if (!nw || nw.length < 6) { errEl.textContent = '⚠️ 新密碼至少 6 碼'; return; }
+  if (nw !== cnf)        { errEl.textContent = '⚠️ 兩次密碼不一致';   return; }
+  try {
+    await changePassword(cur, nw);
+    showToast('✅ 密碼修改成功');
+    ['curPw','newPw','confirmPw'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('pwForm').classList.remove('open');
+    document.getElementById('pwChevron').textContent = '›';
+  } catch (e) {
+    const code = e.code || '';
+    if (code.includes('wrong-password') || code.includes('invalid-credential')) {
+      errEl.textContent = '❌ 目前密碼不正確';
+    } else {
+      errEl.textContent = '❌ ' + e.message;
+    }
+  }
+};
+
+// ===== 門市班別設定 =====
+function renderShiftStoreSelector(stores) {
+  document.getElementById('shiftStoreSelector').innerHTML = stores.map(s =>
+    `<button class="store-sel-btn${s.id === currentShiftStore ? ' active' : ''}"
+      onclick="selectShiftStore('${s.id}')">${s.name || s.id}</button>`
+  ).join('');
+}
+
+window.selectShiftStore = async id => {
+  currentShiftStore = id;
+  document.querySelectorAll('.store-sel-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent.trim() ===
+      ((appConfig.stores || []).find(s => s.id === id)?.name || id))
+  );
+  await loadShiftConfig();
+};
+
+window.loadShiftConfig = async () => {
+  if (!currentShiftStore) return;
+  const data = await getStoreConfig(currentShiftStore, 'shifts');
+  shiftConfig = {
+    shifts:     data?.shifts     || [...DEFAULT_SHIFTS],
+    shiftHours: data?.shiftHours || { ...DEFAULT_HOURS },
+    quickNotes: data?.quickNotes || [...DEFAULT_NOTES],
+    leaveQuota: data?.leaveQuota || { lt6: 0, m6: 3, y1: 7, y2: 10, y3: 14, y5: 15 },
+  };
+  renderShiftTags();
+  renderNoteTags();
+  renderQuota();
+};
+
+function renderShiftTags() {
+  const wrap = document.getElementById('shiftTagsWrap');
+  const allShifts = [...shiftConfig.shifts, ...LEAVE_TYPES];
+  wrap.innerHTML = allShifts.map((s, i) => {
+    const isLeave = LEAVE_TYPES.includes(s);
+    const cls     = isLeave ? 'shift-tag leave-type' : 'shift-tag';
+    const hrs     = (!isLeave && shiftConfig.shiftHours[s] != null) ? ` (${shiftConfig.shiftHours[s]}h)` : '';
+    const del     = isLeave ? '' : `<button class="tag-del" onclick="removeShift(${i})">×</button>`;
+    return `<span class="${cls}">${s}${hrs}${del}</span>`;
+  }).join('');
+}
+
+window.removeShift = idx => {
+  const [removed] = shiftConfig.shifts.splice(idx, 1);
+  delete shiftConfig.shiftHours[removed];
+  renderShiftTags();
+};
+
+window.addShift = () => {
+  const name  = document.getElementById('newShiftName').value.trim();
+  const hours = parseInt(document.getElementById('newShiftHours').value);
+  if (!name) { showToast('⚠️ 請輸入班別名稱'); return; }
+  if ([...shiftConfig.shifts, ...LEAVE_TYPES].includes(name)) { showToast('⚠️ 班別已存在'); return; }
+  shiftConfig.shifts.push(name);
+  if (hours > 0) shiftConfig.shiftHours[name] = hours;
+  document.getElementById('newShiftName').value  = '';
+  document.getElementById('newShiftHours').value = '';
+  renderShiftTags();
+};
+
+function renderNoteTags() {
+  document.getElementById('noteTagsWrap').innerHTML = shiftConfig.quickNotes.map((n, i) =>
+    `<span class="note-tag">${n}<button class="tag-del" onclick="removeNote(${i})">×</button></span>`
+  ).join('');
+}
+
+window.removeNote = idx => { shiftConfig.quickNotes.splice(idx, 1); renderNoteTags(); };
+
+window.addNote = () => {
+  const txt = document.getElementById('newNoteText').value.trim();
+  if (!txt) { showToast('⚠️ 請輸入備註文字'); return; }
+  if (shiftConfig.quickNotes.includes(txt)) { showToast('⚠️ 備註已存在'); return; }
+  shiftConfig.quickNotes.push(txt);
+  document.getElementById('newNoteText').value = '';
+  renderNoteTags();
+};
+
+function renderQuota() {
+  const q = shiftConfig.leaveQuota;
+  document.getElementById('quotaLt6').value = q.lt6 ?? 0;
+  document.getElementById('quota6m').value  = q.m6  ?? 3;
+  document.getElementById('quota1y').value  = q.y1  ?? 7;
+  document.getElementById('quota2y').value  = q.y2  ?? 10;
+  document.getElementById('quota3y').value  = q.y3  ?? 14;
+  document.getElementById('quota5y').value  = q.y5  ?? 15;
+}
+
+window.saveShiftConfig = async () => {
+  if (!currentShiftStore) return;
+  shiftConfig.leaveQuota = {
+    lt6: parseInt(document.getElementById('quotaLt6').value) || 0,
+    m6:  parseInt(document.getElementById('quota6m').value)  || 3,
+    y1:  parseInt(document.getElementById('quota1y').value)  || 7,
+    y2:  parseInt(document.getElementById('quota2y').value)  || 10,
+    y3:  parseInt(document.getElementById('quota3y').value)  || 14,
+    y5:  parseInt(document.getElementById('quota5y').value)  || 15,
+  };
+  try {
+    await saveStoreConfig(currentShiftStore, 'shifts', shiftConfig);
+    showToast('✅ 班別設定已儲存');
+  } catch (e) {
+    showToast('❌ 儲存失敗：' + e.message);
+  }
+};
+
+// ===== 國定假日管理 =====
+function renderYearTabs() {
+  const now   = new Date().getFullYear();
+  const years = [now - 1, now, now + 1];
+  document.getElementById('yearTabs').innerHTML = years.map(y =>
+    `<button class="year-tab${y === holidayYear ? ' active' : ''}" onclick="selectYear(${y})">${y}</button>`
+  ).join('');
+}
+
+window.selectYear = async y => {
+  holidayYear = y;
+  renderYearTabs();
+  await loadHolidays();
+};
+
+async function loadHolidays() {
+  try {
+    const snap  = await getDoc(doc(db, 'settings', 'holidays', String(holidayYear)));
+    holidayDates = snap.exists() ? (snap.data().dates || {}) : {};
+  } catch { holidayDates = {}; }
+  renderHolidayList();
+}
+
+function renderHolidayList() {
+  const list   = document.getElementById('holidayList');
+  const sorted = Object.entries(holidayDates).sort(([a], [b]) => a.localeCompare(b));
+  if (!sorted.length) {
+    list.innerHTML = '<div style="padding:8px 0;color:var(--text-muted);font-size:13px;text-align:center;">尚未設定 ' + holidayYear + ' 年假日</div>';
+    return;
+  }
+  list.innerHTML = sorted.map(([date, name]) => `
+    <div class="holiday-item">
+      <div class="holiday-date">${date}</div>
+      <div class="holiday-name">${name}</div>
+      <button class="holiday-del" onclick="removeHoliday('${date}')">×</button>
+    </div>`).join('');
+}
+
+window.addHoliday = () => {
+  const date = document.getElementById('newHolidayDate').value;
+  const name = document.getElementById('newHolidayName').value.trim();
+  if (!date) { showToast('⚠️ 請選擇日期'); return; }
+  if (!name) { showToast('⚠️ 請輸入假日名稱'); return; }
+  if (!date.startsWith(String(holidayYear))) { showToast(`⚠️ 請選擇 ${holidayYear} 年的日期`); return; }
+  holidayDates[date] = name;
+  document.getElementById('newHolidayDate').value = '';
+  document.getElementById('newHolidayName').value = '';
+  renderHolidayList();
+};
+
+window.removeHoliday = date => { delete holidayDates[date]; renderHolidayList(); };
+
+window.saveHolidayData = async () => {
+  try {
+    await setDoc(doc(db, 'settings', 'holidays', String(holidayYear)), { dates: holidayDates });
+    showToast('✅ 假日設定已儲存');
+  } catch (e) {
+    showToast('❌ 儲存失敗：' + e.message);
+  }
+};
+
+// ===== 系統基礎設定 =====
+function renderStoreList(stores) {
+  const list = document.getElementById('storeList');
+  if (!stores.length) {
+    list.innerHTML = '<div style="padding:8px 16px 0;color:var(--text-muted);font-size:13px;">尚未設定任何門市</div>';
+    return;
+  }
+  list.innerHTML = stores.map(s => `
+    <div class="store-item">
+      <div class="row-icon blue" style="font-size:16px;">🏪</div>
+      <div class="store-name">${s.name || s.id}</div>
+      <div class="store-id">${s.id}</div>
+      <button class="btn-sm danger" onclick="deleteStore('${s.id}')">刪除</button>
+    </div>`).join('');
+}
+
+window.addStore = async () => {
+  const id   = document.getElementById('newStoreId').value.trim();
+  const name = document.getElementById('newStoreName').value.trim();
+  if (!id)   { showToast('⚠️ 請輸入門市代號'); return; }
+  if (!name) { showToast('⚠️ 請輸入門市名稱'); return; }
+  const stores = appConfig.stores || [];
+  if (stores.find(s => s.id === id)) { showToast('⚠️ 門市代號已存在'); return; }
+  stores.push({ id, name });
+  try {
+    await saveAppConfig({ stores });
+    appConfig.stores = stores;
+    renderStoreList(stores);
+    document.getElementById('newStoreId').value   = '';
+    document.getElementById('newStoreName').value = '';
+    showToast(`✅ 已新增門市「${name}」`);
+  } catch (e) {
+    showToast('❌ 新增失敗：' + e.message);
+  }
+};
+
+window.deleteStore = async id => {
+  const s = (appConfig.stores || []).find(s => s.id === id);
+  if (!confirm(`確定要刪除門市「${s?.name || id}」嗎？\n此操作無法復原，請確認門市內已無在職員工。`)) return;
+  const stores = (appConfig.stores || []).filter(s => s.id !== id);
+  try {
+    await saveAppConfig({ stores });
+    appConfig.stores = stores;
+    renderStoreList(stores);
+    showToast(`✅ 已刪除門市「${s?.name || id}」`);
+  } catch (e) {
+    showToast('❌ 刪除失敗：' + e.message);
+  }
+};
 </script>
 </body>
 </html>
