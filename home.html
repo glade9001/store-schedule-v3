@@ -179,6 +179,45 @@
   display: inline-block;
 }
 
+/* 角色預覽提示條 */
+#previewBanner {
+  display: none;
+  background: linear-gradient(135deg, #f9ab00, #e67e22);
+  color: white;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+#previewBanner.show { display: block; }
+
+/* 角色預覽選項卡 */
+.role-option-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.role-option-btn {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.role-option-btn:active { transform: scale(0.96); }
+.role-option-btn.selected { border-color: var(--primary); background: #e8f0fe; }
+.role-option-icon { font-size: 28px; margin-bottom: 6px; }
+.role-option-name { font-size: 14px; font-weight: 800; }
+.role-option-sub  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.role-option-btn.selected .role-option-name { color: var(--primary); }
+
 /* 個人資料 Modal */
 .profile-section { margin-bottom: 16px; }
 .profile-avatar-lg {
@@ -228,6 +267,9 @@
       <button class="btn-logout" id="logoutBtn">登出</button>
     </div>
   </div>
+
+  <!-- 角色預覽提示條 -->
+  <div id="previewBanner" onclick="exitPreview()">🎭 角色預覽模式 — 點此退出</div>
 
   <!-- 主內容 -->
   <div class="main-scroll">
@@ -294,7 +336,42 @@
       </div>
     </div>
     <button class="btn-primary" onclick="window.location.href='settings.html'">⚙️ 帳號設定</button>
+    <button class="btn-secondary" id="rolePreviewEntryBtn" style="margin-top:8px;display:none;" onclick="closeModal('profileModal');openModal('rolePreviewModal')">🎭 角色預覽</button>
     <button class="btn-secondary" style="margin-top:8px;" onclick="closeModal('profileModal')">關閉</button>
+  </div>
+</div>
+
+<!-- 角色預覽 Modal -->
+<div class="modal-overlay" id="rolePreviewModal" onclick="if(event.target===this)closeModal('rolePreviewModal')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div style="font-size:20px;font-weight:900;text-align:center;margin-bottom:6px;">🎭 角色預覽</div>
+    <div style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:20px;">以不同角色體驗首頁介面（不影響實際資料）</div>
+    <div class="role-option-grid" id="roleOptionGrid">
+      <button class="role-option-btn" data-perm="employee" onclick="selectPreviewRole('employee')">
+        <div class="role-option-icon">👤</div>
+        <div class="role-option-name">員工</div>
+        <div class="role-option-sub">查看班表、申請</div>
+      </button>
+      <button class="role-option-btn" data-perm="manager" onclick="selectPreviewRole('manager')">
+        <div class="role-option-icon">🏪</div>
+        <div class="role-option-name">店長</div>
+        <div class="role-option-sub">排班、員工管理</div>
+      </button>
+      <button class="role-option-btn" data-perm="owner" onclick="selectPreviewRole('owner')">
+        <div class="role-option-icon">👑</div>
+        <div class="role-option-name">加盟主</div>
+        <div class="role-option-sub">全門市管理</div>
+      </button>
+      <button class="role-option-btn" data-perm="admin" onclick="selectPreviewRole('admin')">
+        <div class="role-option-icon">⚙️</div>
+        <div class="role-option-name">系統管理員</div>
+        <div class="role-option-sub">最高權限</div>
+      </button>
+    </div>
+    <button class="btn-primary" id="applyPreviewBtn" onclick="applyPreview()" disabled>套用預覽</button>
+    <button class="btn-secondary" id="exitPreviewBtn" style="margin-top:8px;display:none;" onclick="exitPreview();closeModal('rolePreviewModal')">↩ 恢復真實身份</button>
+    <button class="btn-secondary" style="margin-top:8px;" onclick="closeModal('rolePreviewModal')">取消</button>
   </div>
 </div>
 
@@ -321,6 +398,11 @@ const user = await requireAuth();
 let viewWeekStr = getCurrentWeekString();
 let nextWeekStr = getNextWeekString();
 let unsubNextWeek = null;
+let previewPerm  = null; // null = 真實身份
+
+function effectiveUser() {
+  return previewPerm ? { ...user, permission: previewPerm } : user;
+}
 
 initHeader();
 initGreeting();
@@ -331,27 +413,35 @@ await renderSchedule();
 hideLoading();
 document.getElementById('appShell').removeAttribute('hidden');
 
+// 顯示角色預覽入口（僅 admin）
+if (canSysConfig(user)) {
+  document.getElementById('rolePreviewEntryBtn').style.display = '';
+}
+
 // ===== Header =====
 function initHeader() {
+  const eu    = effectiveUser();
   const name  = user.empName || user.empId || '使用者';
-  const perm  = PERM_LABELS[user.permission] || '';
+  const perm  = PERM_LABELS[eu.permission] || '';
   const role  = ROLE_LABELS[user.role] || user.role || '';
-  const color = PERM_COLORS[user.permission] || '#34a853';
+  const color = PERM_COLORS[eu.permission] || '#34a853';
 
   document.getElementById('headerAvatar').textContent = name[0] || '?';
   document.getElementById('headerName').textContent   = name;
-  document.getElementById('headerSub').textContent    = `${role} · ${perm}`;
+  document.getElementById('headerSub').textContent    = previewPerm
+    ? `🎭 預覽：${perm}`
+    : `${role} · ${perm}`;
   document.getElementById('headerStore').textContent  = user.store || '全門市';
   document.getElementById('headerStore').style.background = color + '44';
 
-  // 個人資料 Modal
+  // 個人資料 Modal（顯示真實身份）
   document.getElementById('profileAvatar').textContent  = name[0] || '?';
   document.getElementById('profileName').textContent    = name;
-  document.getElementById('profileSub').textContent     = `${role} · ${perm}`;
+  document.getElementById('profileSub').textContent     = `${role} · ${PERM_LABELS[user.permission] || ''}`;
   document.getElementById('profileEmpId').textContent   = user.empId || '—';
   document.getElementById('profileStore').textContent   = user.store || '全門市';
   document.getElementById('profileRole').textContent    = role || '—';
-  document.getElementById('profilePerm').textContent    = perm || '—';
+  document.getElementById('profilePerm').textContent    = PERM_LABELS[user.permission] || '—';
 }
 
 // ===== 問候 =====
@@ -375,6 +465,7 @@ function renderQuickGrid() {
     { icon:'⚙️', label:'帳號設定', href:'settings.html',      color:'gray'   },
   ];
 
+  const eu = effectiveUser();
   const mgmt = [
     { icon:'📋', label:'排班管理',   href:'schedule-admin.html', perm: canSchedule,        color:'blue'   },
     { icon:'💵', label:'薪資管理',   href:'salary.html',          perm: canViewAllSalary,   color:'orange' },
@@ -382,7 +473,7 @@ function renderQuickGrid() {
     { icon:'👥', label:'員工管理',   href:'employee.html',        perm: canManageEmployee,  color:'purple' },
     { icon:'📊', label:'分析報表',   href:'analytics.html',       perm: canManageEmployee,  color:'purple' },
     { icon:'📤', label:'匯出報表',   href:'export.html',          perm: canManageEmployee,  color:'gray'   },
-  ].filter(item => item.perm(user));
+  ].filter(item => item.perm(eu));
 
   const makeBtn = item => `
     <a class="func-btn ${item.color}" href="${item.href}">
@@ -505,6 +596,40 @@ document.getElementById('tabNextWeek').addEventListener('click', () => {
   document.getElementById('tabThisWeek').classList.remove('active');
   renderSchedule();
 });
+
+// ===== 角色預覽 =====
+let selectedPerm = null;
+
+window.selectPreviewRole = (perm) => {
+  selectedPerm = perm;
+  document.querySelectorAll('.role-option-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.perm === perm);
+  });
+  document.getElementById('applyPreviewBtn').disabled = false;
+};
+
+window.applyPreview = () => {
+  previewPerm = selectedPerm;
+  const PERM_NAMES = { employee:'員工', manager:'店長', owner:'加盟主', admin:'系統管理員' };
+  document.getElementById('previewBanner').textContent =
+    `🎭 角色預覽：${PERM_NAMES[previewPerm]} — 點此退出`;
+  document.getElementById('previewBanner').classList.add('show');
+  document.getElementById('exitPreviewBtn').style.display = '';
+  closeModal('rolePreviewModal');
+  initHeader();
+  renderQuickGrid();
+};
+
+window.exitPreview = () => {
+  previewPerm  = null;
+  selectedPerm = null;
+  document.getElementById('previewBanner').classList.remove('show');
+  document.getElementById('exitPreviewBtn').style.display = 'none';
+  document.querySelectorAll('.role-option-btn').forEach(btn => btn.classList.remove('selected'));
+  document.getElementById('applyPreviewBtn').disabled = true;
+  initHeader();
+  renderQuickGrid();
+};
 
 // ===== 登出 =====
 document.getElementById('logoutBtn').addEventListener('click', async () => {
