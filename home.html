@@ -453,6 +453,30 @@
   </div>
 </div>
 
+<!-- 特補休/劃休 Bottom Sheet -->
+<div class="bs-overlay" id="leaveOverlay" onclick="closeLeaveSheet()"></div>
+<div class="bs-sheet" id="leaveSheet">
+  <div class="bs-handle"></div>
+  <div class="bs-title">特補休 · 劃休</div>
+  <div class="bs-item" onclick="closeLeaveSheet();window.location.href='leave-request.html'">
+    <div class="bs-item-icon" style="background:#e8f0fe;">📅</div>
+    <div class="bs-item-text">
+      <div class="bs-item-label">劃休申請</div>
+      <div class="bs-item-sub">排休、特休、補休月曆申請</div>
+    </div>
+    <div class="bs-item-arrow">›</div>
+  </div>
+  <div class="bs-item" onclick="closeLeaveSheet();window.location.href='leave.html'">
+    <div class="bs-item-icon" style="background:#f3e8ff;">🏖️</div>
+    <div class="bs-item-text">
+      <div class="bs-item-label">特補休紀錄</div>
+      <div class="bs-item-sub">餘額查詢、批次與異動明細</div>
+    </div>
+    <div class="bs-item-arrow">›</div>
+  </div>
+  <div style="height:16px;"></div>
+</div>
+
 <!-- 更多管理 Bottom Sheet -->
 <div class="bs-overlay" id="moreMgmtOverlay" onclick="closeMoreMgmt()"></div>
 <div class="bs-sheet" id="moreMgmtSheet">
@@ -577,9 +601,9 @@ function initGreeting() {
 function renderQuickGrid() {
   // 個人功能固定 3 格
   const personal = [
-    { icon:'📅', label:'班表查閱', href:'schedule.html',      color:'blue'   },
-    { icon:'🏖️', label:'劃休申請', href:'leave-request.html', color:'purple' },
-    { icon:'💰', label:'我的薪資', href:'my-salary.html',     color:'orange' },
+    { icon:'📅', label:'班表',        href:'schedule.html',   color:'blue'   },
+    { icon:'🏖️', label:'特補休/劃休', href:'#',               color:'purple', onclick:'openLeaveSheet();return false;' },
+    { icon:'💰', label:'薪水',        href:'my-salary.html',  color:'orange' },
   ];
 
   const eu = effectiveUser();
@@ -587,9 +611,9 @@ function renderQuickGrid() {
 
   // 管理功能固定 3 格（有權限才顯示）
   const mgmt = hasMgmt ? [
-    { icon:'📋', label:'排班管理', href:'schedule-admin.html', color:'blue'   },
-    { icon:'💵', label:'薪資管理', href:'salary.html',         color:'orange' },
-    { icon:'⋯',  label:'更多管理', href:'#',                   color:'gray', onclick:'openMoreMgmt();return false;' },
+    { icon:'📋', label:'排班',    href:'schedule-admin.html', color:'blue'   },
+    { icon:'💵', label:'算薪水',  href:'salary.html',         color:'orange' },
+    { icon:'⋯',  label:'更多管理', href:'#',                  color:'gray',  onclick:'openMoreMgmt();return false;' },
   ] : [];
 
   const makeBtn = item => `
@@ -607,6 +631,16 @@ function renderQuickGrid() {
     document.getElementById('funcMgmtWrap').style.display = 'none';
   }
 }
+
+// ===== 特補休/劃休 Bottom Sheet =====
+window.openLeaveSheet  = () => {
+  document.getElementById('leaveSheet').classList.add('active');
+  document.getElementById('leaveOverlay').classList.add('active');
+};
+window.closeLeaveSheet = () => {
+  document.getElementById('leaveSheet').classList.remove('active');
+  document.getElementById('leaveOverlay').classList.remove('active');
+};
 
 // ===== 更多管理 Bottom Sheet =====
 window.openMoreMgmt  = () => {
@@ -667,6 +701,9 @@ async function renderSchedule() {
       return;
     }
 
+    // 統計（本週才算，有無班表都顯示）
+    if (isThisWeek) renderStats(entry);
+
     // 有班表資料
     if (!entry?.days || Object.keys(entry.days).length === 0) {
       renderEmpty('此週暫無排班記錄');
@@ -695,9 +732,6 @@ async function renderSchedule() {
     }).join('');
 
     document.getElementById('scheduleList').innerHTML = rows;
-
-    // 統計只算本週
-    if (viewWeekStr === getCurrentWeekString()) renderStats(entry);
 
   } catch (e) {
     renderEmpty('班表讀取失敗，請稍後再試');
