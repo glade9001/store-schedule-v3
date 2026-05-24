@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="莉學商行">
+<meta name="theme-color" content="#1a73e8">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/common.css">
+<title>莉學商行</title>
+<style>
+/* 首頁專屬 Header */
+.home-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 14px 16px calc(14px + env(safe-area-inset-top, 0px));
+  flex-shrink: 0;
+  box-shadow: 0 2px 12px rgba(26,115,232,0.3);
+}
+.home-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.home-avatar {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.25);
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.home-user-info { flex: 1; min-width: 0; }
+.home-user-name { font-size: 15px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-user-sub  { font-size: 11px; opacity: 0.8; margin-top: 1px; }
+.home-store-badge {
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-logout {
+  background: rgba(255,255,255,0.18);
+  border: none;
+  color: white;
+  height: 32px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+/* 無班表提示 */
+.no-schedule {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.no-schedule-icon { font-size: 32px; margin-bottom: 8px; }
+
+/* 週次標籤 */
+.week-label-row {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.published-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+
+/* 個人資料 Modal */
+.profile-section { margin-bottom: 16px; }
+.profile-avatar-lg {
+  width: 64px; height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-size: 28px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+.profile-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.profile-info-row:last-child { border-bottom: none; }
+.profile-info-label { color: var(--text-muted); font-weight: 600; }
+.profile-info-value { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div id="loadingText">載入中...</div>
+</div>
+
+<div id="appShell" hidden>
+
+  <!-- 首頁 Header -->
+  <div class="home-header">
+    <div class="home-header-row">
+      <div class="home-avatar" id="headerAvatar" onclick="openModal('profileModal')">?</div>
+      <div class="home-user-info">
+        <div class="home-user-name" id="headerName">—</div>
+        <div class="home-user-sub" id="headerSub">—</div>
+      </div>
+      <div class="home-store-badge" id="headerStore">—</div>
+      <button class="btn-logout" id="logoutBtn">登出</button>
+    </div>
+  </div>
+
+  <!-- 主內容 -->
+  <div class="main-scroll">
+
+    <!-- 問候卡 -->
+    <div class="greeting-card">
+      <div class="greeting-date" id="greetDate"></div>
+      <div class="greeting-name" id="greetName"></div>
+      <div class="greeting-text" id="greetText"></div>
+      <div class="greeting-badge" id="greetBadge"></div>
+    </div>
+
+    <!-- 快捷功能 -->
+    <div class="section">
+      <div class="section-label">功能選單</div>
+      <div class="quick-grid" id="quickGrid"></div>
+    </div>
+
+    <!-- 我的班表 -->
+    <div class="section">
+      <div class="section-label">我的班表</div>
+      <div class="card" style="padding-bottom: 8px;">
+        <div class="week-tabs-row">
+          <button class="week-tab-btn active" id="tabThisWeek">本週</button>
+          <button class="week-tab-btn" id="tabNextWeek" disabled>下週</button>
+        </div>
+        <div class="week-label-row" id="weekLabelRow"></div>
+        <div id="scheduleList"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-scroll -->
+</div><!-- /appShell -->
+
+<!-- 個人資料 Modal -->
+<div class="modal-overlay" id="profileModal" onclick="if(event.target===this)closeModal('profileModal')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="profile-avatar-lg" id="profileAvatar"></div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:900;" id="profileName"></div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:3px;" id="profileSub"></div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-info-row">
+        <span class="profile-info-label">員工工號</span>
+        <span class="profile-info-value" id="profileEmpId"></span>
+      </div>
+      <div class="profile-info-row">
+        <span class="profile-info-label">所屬門市</span>
+        <span class="profile-info-value" id="profileStore"></span>
+      </div>
+      <div class="profile-info-row">
+        <span class="profile-info-label">職位</span>
+        <span class="profile-info-value" id="profileRole"></span>
+      </div>
+      <div class="profile-info-row">
+        <span class="profile-info-label">系統權限</span>
+        <span class="profile-info-value" id="profilePerm"></span>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="window.location.href='settings.html'">⚙️ 帳號設定</button>
+    <button class="btn-secondary" style="margin-top:8px;" onclick="closeModal('profileModal')">關閉</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+import { requireAuth, logout, canSchedule, canManageEmployee, canViewAllSalary, canSysConfig, isMultiStore } from './js/auth.js';
+import { getWeekMeta, getUserWeekSchedule, onWeekMetaChange } from './js/db.js';
+import {
+  getCurrentWeekString, getNextWeekString, getWeekDates,
+  DAY_NAMES, hideLoading, showToast, openModal, closeModal,
+  getGreeting, PERM_LABELS, ROLE_LABELS, PERM_COLORS, isAutoPublished,
+} from './js/utils.js';
+import { shiftClass, getShiftHours, isLeaveShift } from './js/schedule-utils.js';
+
+// ===== Service Worker =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ===== 初始化 =====
+const user = await requireAuth();
+
+let viewWeekStr = getCurrentWeekString();
+let nextWeekStr = getNextWeekString();
+let unsubNextWeek = null;
+
+initHeader();
+initGreeting();
+renderQuickGrid();
+subscribeNextWeek();
+await renderSchedule();
+
+hideLoading();
+document.getElementById('appShell').removeAttribute('hidden');
+
+// ===== Header =====
+function initHeader() {
+  const name  = user.empName || user.empId || '使用者';
+  const perm  = PERM_LABELS[user.permission] || '';
+  const role  = ROLE_LABELS[user.role] || user.role || '';
+  const color = PERM_COLORS[user.permission] || '#34a853';
+
+  document.getElementById('headerAvatar').textContent = name[0] || '?';
+  document.getElementById('headerName').textContent   = name;
+  document.getElementById('headerSub').textContent    = `${role} · ${perm}`;
+  document.getElementById('headerStore').textContent  = user.store || '全門市';
+  document.getElementById('headerStore').style.background = color + '44';
+
+  // 個人資料 Modal
+  document.getElementById('profileAvatar').textContent  = name[0] || '?';
+  document.getElementById('profileName').textContent    = name;
+  document.getElementById('profileSub').textContent     = `${role} · ${perm}`;
+  document.getElementById('profileEmpId').textContent   = user.empId || '—';
+  document.getElementById('profileStore').textContent   = user.store || '全門市';
+  document.getElementById('profileRole').textContent    = role || '—';
+  document.getElementById('profilePerm').textContent    = perm || '—';
+}
+
+// ===== 問候 =====
+function initGreeting() {
+  const now  = new Date();
+  const { text, icon } = getGreeting();
+  const days = ['週日','週一','週二','週三','週四','週五','週六'];
+  document.getElementById('greetDate').textContent  = `${icon} ${now.getMonth()+1}月${now.getDate()}日 · ${days[now.getDay()]}`;
+  document.getElementById('greetName').textContent  = `嗨，${user.empName || user.empId}！`;
+  document.getElementById('greetText').textContent  = text;
+  document.getElementById('greetBadge').textContent = user.store ? `🏪 ${user.store}` : '🏬 全門市管理';
+}
+
+// ===== 快捷功能按鈕 =====
+function renderQuickGrid() {
+  const items = [
+    { icon:'📅', label:'班表查閱',   href:'schedule.html',       always: true },
+    { icon:'🏖️', label:'劃休申請',   href:'leave-request.html',  always: true },
+    { icon:'💰', label:'我的薪資',   href:'my-salary.html',      always: true },
+    { icon:'✅', label:'代辦事項',   href:'todo.html',            always: true },
+    { icon:'📋', label:'排班管理',   href:'schedule-admin.html', perm: canSchedule },
+    { icon:'💵', label:'薪資管理',   href:'salary.html',         perm: canViewAllSalary },
+    { icon:'🌿', label:'特補休管理', href:'leave.html',           perm: canManageEmployee },
+    { icon:'👥', label:'員工管理',   href:'employee.html',       perm: canManageEmployee },
+    { icon:'📊', label:'分析報表',   href:'analytics.html',      perm: canManageEmployee },
+    { icon:'📤', label:'匯出報表',   href:'export.html',         perm: canManageEmployee },
+    { icon:'⚙️', label:'系統設定',   href:'settings.html',       always: true },
+  ].filter(item => item.always || (item.perm && item.perm(user)));
+
+  document.getElementById('quickGrid').innerHTML = items.map(item => `
+    <a class="quick-btn" href="${item.href}">
+      <span class="quick-btn-icon">${item.icon}</span>
+      <span class="quick-btn-label">${item.label}</span>
+    </a>
+  `).join('');
+}
+
+// ===== 下週發布狀態即時監聽 =====
+function subscribeNextWeek() {
+  if (unsubNextWeek) unsubNextWeek();
+  const store = user.store;
+  if (!store) return;
+
+  unsubNextWeek = onWeekMetaChange(store, nextWeekStr, meta => {
+    const published = (meta?.published === true) || isAutoPublished(nextWeekStr);
+    const btn = document.getElementById('tabNextWeek');
+    btn.disabled = !published;
+    btn.title    = published ? '' : '下週班表尚未發布';
+  });
+}
+
+// ===== 班表渲染 =====
+async function renderSchedule() {
+  const store = user.store;
+  const uid   = user.uid;
+  const dates = getWeekDates(viewWeekStr);
+
+  // 更新週次標籤
+  const [, wNum] = viewWeekStr.split('-W');
+  const startDate = dates[0];
+  const endDate   = dates[6];
+  const fmtDate = d => { const [,m,day] = d.split('-'); return `${parseInt(m)}/${parseInt(day)}`; };
+  document.getElementById('weekLabelRow').innerHTML =
+    `第 ${wNum} 週 &nbsp; ${fmtDate(startDate)} – ${fmtDate(endDate)}`;
+
+  if (!store) {
+    renderEmpty('全門市管理帳號無個人班表');
+    return;
+  }
+
+  try {
+    // 平行讀取週元資料 + 個人班表
+    const [meta, entry] = await Promise.all([
+      getWeekMeta(store, viewWeekStr),
+      getUserWeekSchedule(store, viewWeekStr, uid),
+    ]);
+
+    const isThisWeek = viewWeekStr === getCurrentWeekString();
+    const isPublished = meta?.published || isAutoPublished(viewWeekStr);
+
+    // 下週未發布
+    if (!isThisWeek && !isPublished) {
+      renderEmpty('📋 下週班表尚未發布');
+      return;
+    }
+
+    // 有班表資料
+    if (!entry?.days || Object.keys(entry.days).length === 0) {
+      renderEmpty('此週暫無排班記錄');
+      return;
+    }
+
+    const shiftHours = {}; // TODO: 從 db.getStoreConfig 讀取（後續優化）
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const rows = dates.map((dateStr, i) => {
+      const day = entry.days[dateStr];
+      const shift = day?.shift || '';
+      const hours = shift && !isLeaveShift(shift) ? (day?.hours ?? getShiftHours(shift, shiftHours)) : 0;
+      const note  = day?.note || '';
+      const isToday = dateStr === todayStr;
+
+      return `
+        <div class="schedule-row" style="${isToday ? 'background:#f0f7ff;border-radius:8px;padding:10px 8px;margin:0 -8px;' : ''}">
+          <span class="sched-day" style="${isToday ? 'color:var(--primary);' : ''}">${DAY_NAMES[i]}</span>
+          <span class="sched-date" style="${isToday ? 'color:var(--primary);font-weight:800;' : ''}">${fmtDate(dateStr)}</span>
+          <span class="sched-shift ${shiftClass(shift)}">${shift || '—'}</span>
+          <span class="sched-hours">${hours > 0 ? hours + 'h' : ''}</span>
+        </div>
+        ${note ? `<div class="sched-note" style="color:var(--text-muted);padding-left:84px;font-size:11px;margin-top:-2px;padding-bottom:4px;">${note}</div>` : ''}
+      `;
+    }).join('');
+
+    document.getElementById('scheduleList').innerHTML = rows;
+
+  } catch (e) {
+    renderEmpty('班表讀取失敗，請稍後再試');
+    console.error(e);
+  }
+}
+
+function renderEmpty(msg) {
+  document.getElementById('scheduleList').innerHTML = `
+    <div class="no-schedule">
+      <div class="no-schedule-icon">📭</div>
+      <div>${msg}</div>
+    </div>`;
+}
+
+// ===== 週次切換 =====
+document.getElementById('tabThisWeek').addEventListener('click', () => {
+  viewWeekStr = getCurrentWeekString();
+  document.getElementById('tabThisWeek').classList.add('active');
+  document.getElementById('tabNextWeek').classList.remove('active');
+  renderSchedule();
+});
+
+document.getElementById('tabNextWeek').addEventListener('click', () => {
+  if (document.getElementById('tabNextWeek').disabled) return;
+  viewWeekStr = getNextWeekString();
+  document.getElementById('tabNextWeek').classList.add('active');
+  document.getElementById('tabThisWeek').classList.remove('active');
+  renderSchedule();
+});
+
+// ===== 登出 =====
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (!confirm('確定要登出嗎？')) return;
+  await logout();
+  window.location.replace('login.html');
+});
+
+// ===== 清理 =====
+window.addEventListener('beforeunload', () => {
+  if (unsubNextWeek) unsubNextWeek();
+});
+
+// 把 closeModal 掛到 window 讓 onclick 可用
+window.openModal  = (id) => document.getElementById(id)?.classList.add('active');
+window.closeModal = (id) => document.getElementById(id)?.classList.remove('active');
+</script>
+</body>
+</html>

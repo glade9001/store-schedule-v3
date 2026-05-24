@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="莉學商行">
+<meta name="theme-color" content="#1a73e8">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/common.css">
+<title>莉學商行 — 登入</title>
+<style>
+body { overflow-y: auto; height: auto; }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div id="loadingText">驗證身分中...</div>
+</div>
+
+<div class="login-page" id="loginPage" style="display:none;">
+  <div class="login-logo">🏪</div>
+  <div class="login-appname">莉學商行</div>
+  <div class="login-sub">門市管理系統</div>
+
+  <div class="login-card">
+    <div class="form-group">
+      <label class="form-label" for="empId">員工工號</label>
+      <input
+        class="form-input"
+        id="empId"
+        type="text"
+        placeholder="例：A12345"
+        maxlength="6"
+        autocomplete="username"
+        autocorrect="off"
+        autocapitalize="characters"
+        spellcheck="false"
+      >
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="password">密碼</label>
+      <div class="login-input-wrap">
+        <input
+          class="form-input"
+          id="password"
+          type="password"
+          placeholder="請輸入密碼"
+          autocomplete="current-password"
+          style="padding-right: 44px;"
+        >
+        <button class="login-eye" id="eyeBtn" type="button" aria-label="顯示/隱藏密碼">👁</button>
+      </div>
+    </div>
+
+    <div id="loginError" style="color:var(--danger);font-size:13px;font-weight:600;margin-bottom:12px;min-height:18px;"></div>
+
+    <button class="btn-primary" id="loginBtn">登入</button>
+
+    <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:16px;">
+      忘記密碼請聯絡店長或管理員
+    </p>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+import { auth } from './js/firebase-config.js';
+import { login } from './js/auth.js';
+import { hideLoading, showToast } from './js/utils.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+// 已登入 → 直接跳首頁
+onAuthStateChanged(auth, fbUser => {
+  if (fbUser) {
+    window.location.replace('home.html');
+    return;
+  }
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginPage').style.flexDirection = 'column';
+  hideLoading();
+  document.getElementById('empId').focus();
+});
+
+// 顯示/隱藏密碼
+document.getElementById('eyeBtn').addEventListener('click', () => {
+  const pw = document.getElementById('password');
+  const btn = document.getElementById('eyeBtn');
+  if (pw.type === 'password') { pw.type = 'text'; btn.textContent = '🙈'; }
+  else { pw.type = 'password'; btn.textContent = '👁'; }
+});
+
+// 工號自動大寫格式化
+document.getElementById('empId').addEventListener('input', e => {
+  let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (v.length > 6) v = v.slice(0, 6);
+  e.target.value = v;
+});
+
+// Enter 觸發登入
+document.getElementById('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('empId').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('password').focus();
+});
+
+// 登入
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+
+async function doLogin() {
+  const empId    = document.getElementById('empId').value.trim().toUpperCase();
+  const password = document.getElementById('password').value;
+  const errEl    = document.getElementById('loginError');
+  const btn      = document.getElementById('loginBtn');
+
+  errEl.textContent = '';
+
+  if (!empId) { errEl.textContent = '⚠️ 請輸入員工工號'; return; }
+  if (!/^[A-Z][0-9]{5}$/.test(empId)) { errEl.textContent = '⚠️ 工號格式錯誤（1個字母 + 5碼數字）'; return; }
+  if (!password) { errEl.textContent = '⚠️ 請輸入密碼'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '登入中...';
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  document.getElementById('loadingText').textContent = '驗證身分中...';
+
+  try {
+    await login(empId, password);
+    // onAuthStateChanged 會觸發跳轉
+  } catch (e) {
+    hideLoading();
+    btn.disabled = false;
+    btn.textContent = '登入';
+    const code = e.code || '';
+    if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) {
+      errEl.textContent = '❌ 工號或密碼錯誤';
+    } else if (code.includes('too-many-requests')) {
+      errEl.textContent = '⚠️ 登入嘗試過多，請稍後再試';
+    } else if (code.includes('network')) {
+      errEl.textContent = '❌ 網路連線失敗，請確認網路狀態';
+    } else {
+      errEl.textContent = '❌ 登入失敗：' + e.message;
+    }
+  }
+}
+</script>
+</body>
+</html>
