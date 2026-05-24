@@ -7,6 +7,9 @@ import {
   createUserWithEmailAndPassword,
   EmailAuthProvider,
   reauthenticateWithCredential,
+  GoogleAuthProvider,
+  signInWithPopup,
+  linkWithPopup,
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -33,6 +36,38 @@ export async function logout() {
   await signOut(auth);
   currentUser = null;
 }
+
+// ===== Google 登入 =====
+export async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  const cred = await signInWithPopup(auth, provider);
+  const profile = await loadProfile(cred.user.uid);
+  if (!profile) {
+    // Google 帳號尚未綁定任何員工工號，登出並丟錯
+    await signOut(auth);
+    const err = new Error('此 Google 帳號尚未綁定任何員工工號，請先用工號登入後至「設定」頁綁定');
+    err.code = 'not-linked';
+    throw err;
+  }
+  if (profile.status === '離職') {
+    await signOut(auth);
+    const err = new Error('此帳號已離職，無法登入');
+    err.code = 'resigned';
+    throw err;
+  }
+  currentUser = profile;
+  return currentUser;
+}
+
+// ===== 綁定 Google 帳號（已登入後呼叫）=====
+export async function linkGoogle() {
+  const provider = new GoogleAuthProvider();
+  await linkWithPopup(auth.currentUser, provider);
+}
+
+// ===== 取消綁定 Google =====
+export const isGoogleLinked = () =>
+  auth.currentUser?.providerData?.some(p => p.providerId === 'google.com') ?? false;
 
 // ===== 修改密碼（需重新驗證）=====
 export async function changePassword(currentPassword, newPassword) {
