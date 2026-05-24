@@ -315,23 +315,7 @@
     </div>
 
     <!-- 統計卡 -->
-    <div class="stats-row" id="statsRow" style="display:none;">
-      <div class="stat-card">
-        <div class="stat-icon">⏱️</div>
-        <div class="stat-val" id="statWeekH">--</div>
-        <div class="stat-label">本週工時 (h)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📅</div>
-        <div class="stat-val" id="statWeekDays">--</div>
-        <div class="stat-label">本週出班 (天)</div>
-      </div>
-      <div class="stat-card" onclick="window.location.href='leave.html'">
-        <div class="stat-icon">🏖️</div>
-        <div class="stat-val" id="statLeave" style="color:var(--accent);">--</div>
-        <div class="stat-label">特休餘額 (天)</div>
-      </div>
-    </div>
+    <div id="statsArea"></div>
 
     <!-- 我的班表 -->
     <div class="section">
@@ -627,26 +611,105 @@ function renderEmpty(msg) {
     </div>`;
 }
 
-function renderStats(entry) {
-  if (!user.store) return; // 全門市管理帳號不顯示
-  const row = document.getElementById('statsRow');
-  row.style.display = '';
+// 計算任意日期的週字串
+function weekStringOf(date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - day + 1);
+  mon.setHours(0, 0, 0, 0);
+  const yr = mon.getFullYear();
+  const first = new Date(yr, 0, 1);
+  const w = Math.ceil((((mon - first) / 86400000) + first.getDay() + 1) / 7);
+  return `${yr}-W${w < 10 ? '0' + w : w}`;
+}
 
-  if (!entry?.days) {
-    document.getElementById('statWeekH').textContent    = '0';
-    document.getElementById('statWeekDays').textContent = '0';
-    return;
-  }
+async function renderStats(entry) {
+  if (!user.store) return;
+  const isPartTime = user.role === '工讀';
+  const area = document.getElementById('statsArea');
 
-  let totalH = 0, workDays = 0;
-  for (const day of Object.values(entry.days)) {
-    if (day.shift && !isLeaveShift(day.shift)) {
-      workDays++;
-      totalH += day.hours ?? getShiftHours(day.shift, {});
+  if (isPartTime) {
+    // 工讀：本週工時 ＋ 本月工時
+    area.innerHTML = `
+      <div class="stats-row" style="grid-template-columns:repeat(2,1fr);">
+        <div class="stat-card">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-val" id="statWeekH">--</div>
+          <div class="stat-label">本週工時 (h)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📆</div>
+          <div class="stat-val" id="statMonthH">--</div>
+          <div class="stat-label">本月工時 (h)</div>
+        </div>
+      </div>`;
+
+    // 本週工時（從已載入資料算）
+    let weekH = 0;
+    if (entry?.days) {
+      for (const day of Object.values(entry.days)) {
+        if (day.shift && !isLeaveShift(day.shift))
+          weekH += day.hours ?? getShiftHours(day.shift, {});
+      }
     }
+    document.getElementById('statWeekH').textContent = weekH;
+
+    // 本月工時（非同步）
+    loadMonthHours();
+
+  } else {
+    // 正職：特休 ＋ 補休 ＋ 本月加班
+    area.innerHTML = `
+      <div class="stats-row">
+        <div class="stat-card" onclick="window.location.href='leave.html'">
+          <div class="stat-icon">🏖️</div>
+          <div class="stat-val" style="color:var(--accent);">--</div>
+          <div class="stat-label">特休餘額 (天)</div>
+        </div>
+        <div class="stat-card" onclick="window.location.href='leave.html'">
+          <div class="stat-icon">📅</div>
+          <div class="stat-val" style="color:var(--accent);">--</div>
+          <div class="stat-label">補休餘額 (天)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-val" style="color:var(--danger);">--</div>
+          <div class="stat-label">本月加班 (h)</div>
+        </div>
+      </div>`;
   }
-  document.getElementById('statWeekH').textContent    = totalH > 0 ? totalH : '0';
-  document.getElementById('statWeekDays').textContent = workDays;
+}
+
+async function loadMonthHours() {
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth();
+
+  // 收集本月所有周次
+  const weeks = new Set();
+  const d = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  while (d <= last) { weeks.add(weekStringOf(d)); d.setDate(d.getDate() + 7); }
+  weeks.add(weekStringOf(last));
+
+  let monthH = 0;
+  await Promise.all([...weeks].map(async weekStr => {
+    try {
+      const entry = await getUserWeekSchedule(user.store, weekStr, user.uid);
+      if (!entry?.days) return;
+      for (const [dateStr, day] of Object.entries(entry.days)) {
+        const dd = new Date(dateStr);
+        if (dd.getFullYear() === year && dd.getMonth() === month
+            && day.shift && !isLeaveShift(day.shift)) {
+          monthH += day.hours ?? getShiftHours(day.shift, {});
+        }
+      }
+    } catch { /* 不阻擋 */ }
+  }));
+
+  const el = document.getElementById('statMonthH');
+  if (el) el.textContent = monthH;
 }
 
 // ===== 週次切換 =====
