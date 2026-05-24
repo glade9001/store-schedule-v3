@@ -3,7 +3,7 @@ import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-aut
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // 替換成新 Firebase 專案的設定（正式上線前更新）
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyAmVwq-Wny1KMRGNSdOnBEJ_A-3HmTO-hM",
   authDomain: "store-schedule-3b056.firebaseapp.com",
   projectId: "store-schedule-3b056",

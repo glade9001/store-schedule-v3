@@ -10,6 +10,185 @@
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/common.css">
 <title>👥 員工管理 — 莉學商行</title>
+<style>
+/* ===== FILTER BAR ===== */
+.filter-bar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.search-wrap {
+  flex: 1;
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 10px 0 32px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  background: #f8fafc;
+}
+.search-input:focus { border-color: var(--primary); background: white; }
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  pointer-events: none;
+}
+.filter-select {
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  background: #f8fafc;
+  cursor: pointer;
+  color: var(--text);
+}
+.filter-select:focus { border-color: var(--primary); }
+
+/* ===== EMPLOYEE LIST ===== */
+.emp-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.emp-card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.emp-card.inactive { opacity: 0.6; }
+.emp-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.emp-avatar.resigned { background: linear-gradient(135deg, #94a3b8, #64748b); }
+.emp-info { flex: 1; min-width: 0; }
+.emp-name { font-size: 15px; font-weight: 800; }
+.emp-id   { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 1px; }
+.emp-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.tag-role     { background: #f1f5f9; color: var(--text); }
+.tag-store    { background: #e8f0fe; color: var(--primary); }
+.tag-perm-admin    { background: #fce8e6; color: var(--danger); }
+.tag-perm-owner    { background: #f3e8ff; color: var(--purple); }
+.tag-perm-manager  { background: #e8f0fe; color: var(--primary); }
+.tag-perm-employee { background: #e8f5e9; color: var(--accent); }
+.tag-resigned { background: #f1f5f9; color: var(--text-muted); }
+.tag-transfer { background: #fff8e1; color: #7c4a00; }
+.emp-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
+.act-btn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+}
+.act-btn.danger  { background: #fce8e6; color: var(--danger); }
+.act-btn.success { background: #e8f5e9; color: var(--accent); }
+.act-btn.primary { background: #e8f0fe; color: var(--primary); }
+
+.empty-msg { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); font-size: 14px; }
+
+/* ===== ADD BUTTON ===== */
+.add-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+/* ===== FORM STYLES ===== */
+.form-section { margin-bottom: 18px; }
+.form-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.field-row { display: flex; gap: 10px; }
+.field-row .form-group { flex: 1; }
+.form-group { margin-bottom: 12px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; }
+.form-input, .form-select {
+  width: 100%;
+  height: 40px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: white;
+  color: var(--text);
+}
+.form-input:focus, .form-select:focus { border-color: var(--primary); }
+.form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+.btn-modal-cancel { flex: 0; padding: 13px 18px; background: #f1f5f9; color: var(--text); border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-modal-submit { flex: 1; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.btn-modal-submit:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+.btn-modal-danger { flex: 1; padding: 13px; background: var(--danger); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+.pw-notice {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #7c4a00;
+  margin-bottom: 14px;
+}
+
+.modal-title { font-size: 18px; font-weight: 900; margin-bottom: 16px; }
+</style>
 </head>
 <body>
 
@@ -19,29 +198,486 @@
 </div>
 
 <div id="appShell" hidden>
+
   <header class="top-header">
     <button class="btn-back" onclick="window.location.href='home.html'">← 首頁</button>
     <h1 class="header-title">👥 員工管理</h1>
+    <div class="header-badge" id="storeBadge" style="display:none;"></div>
+    <button class="add-btn" onclick="openAddModal()">＋ 新增</button>
   </header>
 
-  <div class="maintenance-wrap">
-    <div class="maintenance-icon">👥</div>
-    <h2 class="maintenance-title">功能開發中</h2>
-    <p class="maintenance-desc">此功能正在建置中，敬請期待。<br>完成後將自動上線。</p>
-    <button class="btn-primary" style="max-width:200px;" onclick="window.location.href='home.html'">返回首頁</button>
+  <div class="store-tabs" id="storeTabs" style="display:none;"></div>
+
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="搜尋姓名或工號..." oninput="renderList()">
+    </div>
+    <select class="filter-select" id="statusFilter" onchange="renderList()">
+      <option value="在職">在職</option>
+      <option value="離職">離職</option>
+      <option value="">全部</option>
+    </select>
+  </div>
+
+  <div class="emp-list" id="empList"></div>
+
+</div>
+
+<!-- ===== ADD / EDIT MODAL ===== -->
+<div class="modal-overlay" id="empModal" onclick="if(event.target===this)closeEmpModal()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">新增員工</div>
+
+    <div id="createFields">
+      <div class="form-section-title">帳號資訊</div>
+      <div class="field-row">
+        <div class="form-group">
+          <label class="form-label">工號</label>
+          <input class="form-input" id="fEmpId" type="text" placeholder="A12345" maxlength="6"
+            autocorrect="off" autocapitalize="characters" spellcheck="false">
+        </div>
+        <div class="form-group">
+          <label class="form-label">初始密碼</label>
+          <input class="form-input" id="fPassword" type="text" placeholder="至少 6 碼" autocomplete="new-password">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section-title">基本資料</div>
+    <div class="field-row">
+      <div class="form-group">
+        <label class="form-label">姓名</label>
+        <input class="form-input" id="fEmpName" type="text" placeholder="員工姓名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">到職日期</label>
+        <input class="form-input" id="fHireDate" type="date">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="form-group">
+        <label class="form-label">職務角色</label>
+        <select class="form-select" id="fRole">
+          <option value="店長">店長</option>
+          <option value="副店">副店長</option>
+          <option value="全職">全職</option>
+          <option value="工讀">工讀生</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">排班順序</label>
+        <input class="form-input" id="fSortKey" type="number" min="1" max="99" placeholder="1">
+      </div>
+    </div>
+
+    <div class="form-section-title">系統設定</div>
+    <div class="field-row">
+      <div class="form-group">
+        <label class="form-label">系統權限</label>
+        <select class="form-select" id="fPermission">
+          <option value="employee">員工</option>
+          <option value="manager">店長（可排班/審核）</option>
+          <option value="owner">加盟主（跨店）</option>
+          <option value="admin">管理員（最高）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">所屬門市</label>
+        <select class="form-select" id="fStore"></select>
+      </div>
+    </div>
+
+    <div id="transferRow" class="form-group" style="display:none;">
+      <label class="form-label">調店生效日期（選填，留空表示立即）</label>
+      <input class="form-input" id="fTransferDate" type="date">
+      <div class="form-hint">填入日期後，員工將於該日登入時自動更新所屬門市</div>
+    </div>
+
+    <div id="editPwSection" style="display:none;">
+      <div class="form-section-title">密碼管理</div>
+      <div class="pw-notice">⚠️ 如需重設密碼，請至 Firebase Console → Authentication → 選取帳號 → 重設密碼，或請員工透過「設定」自行修改。</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeEmpModal()">取消</button>
+      <button class="btn-modal-submit" id="modalSubmitBtn" onclick="submitEmpModal()">建立帳號</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DEACTIVATE CONFIRM ===== -->
+<div class="modal-overlay" id="deactivateModal" onclick="if(event.target===this)closeDeactivateModal()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="deactivateTitle">確認離職</div>
+    <p id="deactivateBody" style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;"></p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeactivateModal()">取消</button>
+      <button class="btn-modal-danger" id="deactivateConfirmBtn">確認</button>
+    </div>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script type="module">
-import { requireAuth } from './js/auth.js';
-import { hideLoading } from './js/utils.js';
-(async () => {
-  await requireAuth();
-  document.getElementById('appShell').removeAttribute('hidden');
+import { requireAuth, canManageEmployee, canSysConfig, isMultiStore } from './js/auth.js';
+import { firebaseConfig } from './js/firebase-config.js';
+import { getAllUsers, saveUserProfile, updateUserProfile, getAppConfig, deleteField } from './js/db.js';
+import { hideLoading, showLoading, showToast, openModal, closeModal, PERM_LABELS, PERM_COLORS } from './js/utils.js';
+import {
+  collection, query, where, getDocs,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signOut as fbSignOut,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { db } from './js/firebase-config.js';
+
+// Secondary Firebase app for creating users (keeps admin logged in)
+const secondaryApp  = initializeApp(firebaseConfig, 'employee-creator');
+const secondaryAuth = getAuth(secondaryApp);
+const toEmail = id => `${id.toLowerCase()}@lixue.internal`;
+
+// ===== STATE =====
+let user, appConfig = {}, allUsers = [], stores = [];
+let editingUid = null;
+let deactivateUid = null;
+
+// ===== BOOT =====
+user = await requireAuth();
+if (!canManageEmployee(user)) {
+  alert('您沒有員工管理的權限');
+  window.location.replace('home.html');
+}
+
+showLoading('載入員工資料...');
+appConfig = await getAppConfig().catch(() => ({}));
+stores = appConfig.stores || [];
+
+initStoreTabs();
+populateStoreSelects();
+await loadUsers();
+hideLoading();
+document.getElementById('appShell').removeAttribute('hidden');
+
+// ===== STORE TABS (for owner/admin) =====
+function initStoreTabs() {
+  if (!isMultiStore(user)) {
+    document.getElementById('storeBadge').style.display = '';
+    document.getElementById('storeBadge').textContent = user.store || '';
+    return;
+  }
+  const bar = document.getElementById('storeTabs');
+  bar.style.display = 'flex';
+  // Add "全部" tab for multi-store view
+  const tabStores = ['全部', ...stores];
+  bar.innerHTML = tabStores.map(s =>
+    `<button class="store-tab${s==='全部'?' active':''}" data-store="${s}" onclick="switchStoreTab('${s}')">${s}</button>`
+  ).join('');
+}
+
+let currentStoreFilter = isMultiStore(user) ? '全部' : user.store;
+
+window.switchStoreTab = s => {
+  currentStoreFilter = s;
+  document.querySelectorAll('.store-tab').forEach(b => b.classList.toggle('active', b.dataset.store === s));
+  renderList();
+};
+
+function populateStoreSelects() {
+  const opts = stores.map(s => `<option value="${s}">${s}</option>`).join('');
+  document.getElementById('fStore').innerHTML = opts || `<option value="${user.store}">${user.store}</option>`;
+  // Default to current user's store
+  document.getElementById('fStore').value = user.store || '';
+}
+
+// ===== LOAD USERS =====
+async function loadUsers() {
+  try {
+    if (isMultiStore(user)) {
+      allUsers = await getAllUsers();
+    } else {
+      // All users in this store (including 離職)
+      const snap = await getDocs(query(collection(db, 'users'), where('store', '==', user.store)));
+      allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    }
+    renderList();
+  } catch (e) {
+    showToast('❌ 載入失敗：' + e.message);
+  }
+}
+
+// ===== RENDER LIST =====
+window.renderList = () => {
+  const q       = document.getElementById('searchInput').value.trim().toLowerCase();
+  const status  = document.getElementById('statusFilter').value;
+  const list    = document.getElementById('empList');
+
+  let filtered = allUsers.filter(u => {
+    if (status && u.status !== status) return false;
+    if (currentStoreFilter && currentStoreFilter !== '全部' && u.store !== currentStoreFilter) return false;
+    if (q && !u.empName?.toLowerCase().includes(q) && !u.empId?.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => (a.sortKey || 99) - (b.sortKey || 99) || a.empName?.localeCompare(b.empName));
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-msg"><div style="font-size:40px;">👤</div><div>沒有符合的員工</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(emp => renderCard(emp)).join('');
+};
+
+function renderCard(emp) {
+  const name     = emp.empName || '—';
+  const initials = name.slice(-2);
+  const isActive = emp.status !== '離職';
+  const perm     = emp.permission || 'employee';
+  const permLabel = PERM_LABELS[perm] || perm;
+  const permColor = PERM_COLORS[perm] || '#64748b';
+
+  const transferTag = emp.pendingStore && emp.transferDate
+    ? `<span class="tag tag-transfer">→${emp.pendingStore} ${emp.transferDate}</span>`
+    : '';
+
+  const statusTag = !isActive
+    ? `<span class="tag tag-resigned">已離職</span>` : '';
+
+  return `
+  <div class="emp-card${!isActive ? ' inactive' : ''}">
+    <div class="emp-avatar${!isActive ? ' resigned' : ''}">${initials}</div>
+    <div class="emp-info">
+      <div class="emp-name">${name}</div>
+      <div class="emp-id">${emp.empId || '—'} ${emp.hireDate ? `・到職 ${emp.hireDate}` : ''}</div>
+      <div class="emp-tags">
+        <span class="tag tag-role">${emp.role || '—'}</span>
+        <span class="tag tag-store">${emp.store || '—'}</span>
+        <span class="tag tag-perm-${perm}" style="color:${permColor};">${permLabel}</span>
+        ${statusTag}
+        ${transferTag}
+      </div>
+    </div>
+    <div class="emp-actions">
+      <button class="act-btn primary" onclick="openEditModal('${emp.uid}')">編輯</button>
+      ${isActive
+        ? `<button class="act-btn danger" onclick="openDeactivate('${emp.uid}',false)">離職</button>`
+        : `<button class="act-btn success" onclick="openDeactivate('${emp.uid}',true)">復職</button>`
+      }
+    </div>
+  </div>`;
+}
+
+// ===== ADD MODAL =====
+window.openAddModal = () => {
+  editingUid = null;
+  document.getElementById('modalTitle').textContent = '新增員工';
+  document.getElementById('modalSubmitBtn').textContent = '建立帳號';
+  document.getElementById('createFields').style.display = '';
+  document.getElementById('transferRow').style.display = 'none';
+  document.getElementById('editPwSection').style.display = 'none';
+
+  document.getElementById('fEmpId').value    = '';
+  document.getElementById('fPassword').value = '';
+  document.getElementById('fEmpName').value  = '';
+  document.getElementById('fHireDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fRole').value     = '全職';
+  document.getElementById('fSortKey').value  = '';
+  document.getElementById('fStore').value    = user.store || '';
+  document.getElementById('fPermission').value = 'employee';
+  limitPermSelect();
+
+  openModal('empModal');
+};
+
+// ===== EDIT MODAL =====
+window.openEditModal = uid => {
+  editingUid = uid;
+  const emp = allUsers.find(u => u.uid === uid);
+  if (!emp) return;
+
+  document.getElementById('modalTitle').textContent = `編輯：${emp.empName || emp.empId}`;
+  document.getElementById('modalSubmitBtn').textContent = '儲存';
+  document.getElementById('createFields').style.display = 'none';
+  document.getElementById('editPwSection').style.display = '';
+
+  document.getElementById('fEmpName').value    = emp.empName  || '';
+  document.getElementById('fHireDate').value   = emp.hireDate || '';
+  document.getElementById('fRole').value       = emp.role     || '全職';
+  document.getElementById('fSortKey').value    = emp.sortKey  || '';
+  document.getElementById('fStore').value      = emp.store    || '';
+  document.getElementById('fPermission').value = emp.permission || 'employee';
+  limitPermSelect();
+
+  // Show transfer date field if store is changing
+  const originalStore = emp.store;
+  document.getElementById('fStore').dataset.original = originalStore;
+  document.getElementById('fStore').onchange = () => {
+    const changed = document.getElementById('fStore').value !== originalStore;
+    document.getElementById('transferRow').style.display = changed ? '' : 'none';
+    document.getElementById('fTransferDate').value = '';
+  };
+  document.getElementById('transferRow').style.display = 'none';
+  document.getElementById('fTransferDate').value = emp.transferDate || '';
+
+  openModal('empModal');
+};
+
+window.closeEmpModal = () => closeModal('empModal');
+
+// Limit permission options based on current user's level
+function limitPermSelect() {
+  const sel = document.getElementById('fPermission');
+  const perm = user.permission;
+  // manager can only set employee/manager
+  // owner can set employee/manager/owner
+  // admin can set anything
+  [...sel.options].forEach(o => {
+    if (perm === 'manager')      o.disabled = ['owner','admin'].includes(o.value);
+    else if (perm === 'owner')   o.disabled = o.value === 'admin';
+    else                         o.disabled = false;
+  });
+}
+
+// ===== SUBMIT =====
+window.submitEmpModal = async () => {
+  const btn = document.getElementById('modalSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '處理中...';
+
+  try {
+    if (editingUid) {
+      await saveEdit();
+    } else {
+      await createEmployee();
+    }
+    closeEmpModal();
+    await loadUsers();
+  } catch (e) {
+    showToast('❌ ' + (e.message || '操作失敗'));
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingUid ? '儲存' : '建立帳號';
+  }
+};
+
+async function createEmployee() {
+  const empId    = document.getElementById('fEmpId').value.trim().toUpperCase();
+  const password = document.getElementById('fPassword').value.trim();
+  const empName  = document.getElementById('fEmpName').value.trim();
+  const hireDate = document.getElementById('fHireDate').value;
+  const role     = document.getElementById('fRole').value;
+  const sortKey  = parseInt(document.getElementById('fSortKey').value) || 99;
+  const store    = document.getElementById('fStore').value;
+  const permission = document.getElementById('fPermission').value;
+
+  if (!/^[A-Z][0-9]{5}$/.test(empId)) throw new Error('工號格式錯誤（1個字母 + 5碼數字）');
+  if (!empName)  throw new Error('請填寫姓名');
+  if (!password || password.length < 6) throw new Error('密碼至少 6 碼');
+  if (!store) throw new Error('請選擇所屬門市');
+
+  // Check empId uniqueness
+  const dup = allUsers.find(u => u.empId === empId);
+  if (dup) throw new Error(`工號 ${empId} 已存在`);
+
+  showLoading('建立帳號中...');
+  // Create Firebase Auth account via secondary app (admin stays logged in)
+  const cred = await createUserWithEmailAndPassword(secondaryAuth, toEmail(empId), password);
+  const uid  = cred.user.uid;
+  await fbSignOut(secondaryAuth);
+
+  await saveUserProfile(uid, {
+    empId, empName, hireDate, role, sortKey, store, permission,
+    status: '在職',
+    createdAt: new Date().toISOString(),
+    createdBy: user.empName || user.empId,
+  });
+
   hideLoading();
-})();
+  showToast(`✅ 帳號 ${empId} 建立成功`);
+}
+
+async function saveEdit() {
+  const empName    = document.getElementById('fEmpName').value.trim();
+  const hireDate   = document.getElementById('fHireDate').value;
+  const role       = document.getElementById('fRole').value;
+  const sortKey    = parseInt(document.getElementById('fSortKey').value) || 99;
+  const store      = document.getElementById('fStore').value;
+  const permission = document.getElementById('fPermission').value;
+  const transferDate = document.getElementById('fTransferDate').value;
+
+  if (!empName) throw new Error('請填寫姓名');
+  if (!store) throw new Error('請選擇所屬門市');
+
+  const emp = allUsers.find(u => u.uid === editingUid);
+  const originalStore = emp?.store;
+
+  const data = { empName, hireDate, role, sortKey, permission };
+
+  if (store !== originalStore) {
+    if (transferDate) {
+      // Deferred transfer
+      data.pendingStore  = store;
+      data.transferDate  = transferDate;
+      // store stays the same until transfer date
+    } else {
+      // Immediate transfer
+      data.store         = store;
+      data.pendingStore  = deleteField();
+      data.transferDate  = deleteField();
+    }
+  } else {
+    data.store = store;
+  }
+
+  showLoading('儲存中...');
+  await updateUserProfile(editingUid, data);
+  hideLoading();
+  showToast('✅ 已儲存');
+}
+
+// ===== DEACTIVATE / REINSTATE =====
+window.openDeactivate = (uid, reinstate) => {
+  deactivateUid = uid;
+  const emp = allUsers.find(u => u.uid === uid);
+  const name = emp?.empName || uid;
+
+  if (reinstate) {
+    document.getElementById('deactivateTitle').textContent = `確認復職`;
+    document.getElementById('deactivateBody').textContent  = `確定將 ${name} 設為「在職」狀態？`;
+    document.getElementById('deactivateConfirmBtn').textContent = '確認復職';
+    document.getElementById('deactivateConfirmBtn').className   = 'btn-modal-submit';
+    document.getElementById('deactivateConfirmBtn').onclick     = () => confirmStatus('在職');
+  } else {
+    document.getElementById('deactivateTitle').textContent = `確認離職`;
+    document.getElementById('deactivateBody').textContent  = `確定將 ${name} 設為「離職」狀態？離職後該員工將無法登入系統。`;
+    document.getElementById('deactivateConfirmBtn').textContent = '確認離職';
+    document.getElementById('deactivateConfirmBtn').className   = 'btn-modal-danger';
+    document.getElementById('deactivateConfirmBtn').onclick     = () => confirmStatus('離職');
+  }
+  openModal('deactivateModal');
+};
+
+window.closeDeactivateModal = () => closeModal('deactivateModal');
+
+async function confirmStatus(newStatus) {
+  try {
+    await updateUserProfile(deactivateUid, { status: newStatus });
+    closeDeactivateModal();
+    await loadUsers();
+    showToast(newStatus === '離職' ? '已設為離職' : '✅ 已復職');
+  } catch (e) {
+    showToast('❌ 操作失敗：' + e.message);
+  }
+}
 </script>
 </body>
 </html>
