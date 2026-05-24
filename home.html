@@ -486,6 +486,8 @@ function renderQuickGrid() {
   if (mgmt.length > 0) {
     document.getElementById('funcGridMgmt').innerHTML = mgmt.map(makeBtn).join('');
     document.getElementById('funcMgmtWrap').style.display = '';
+  } else {
+    document.getElementById('funcMgmtWrap').style.display = 'none';
   }
 }
 
