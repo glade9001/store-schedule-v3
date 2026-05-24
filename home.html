@@ -218,6 +218,28 @@
 .role-option-sub  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .role-option-btn.selected .role-option-name { color: var(--primary); }
 
+/* 統計卡 */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.stat-card:active { transform: scale(0.97); }
+.stat-icon  { font-size: 20px; margin-bottom: 3px; }
+.stat-val   { font-size: 20px; font-weight: 900; color: var(--primary); line-height: 1; }
+.stat-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-weight: 600; }
+
 /* 個人資料 Modal */
 .profile-section { margin-bottom: 16px; }
 .profile-avatar-lg {
@@ -289,6 +311,25 @@
         <div class="func-divider"></div>
         <div class="func-section-title">管理功能</div>
         <div class="func-grid" id="funcGridMgmt"></div>
+      </div>
+    </div>
+
+    <!-- 統計卡 -->
+    <div class="stats-row" id="statsRow" style="display:none;">
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-val" id="statWeekH">--</div>
+        <div class="stat-label">本週工時 (h)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-val" id="statWeekDays">--</div>
+        <div class="stat-label">本週出班 (天)</div>
+      </div>
+      <div class="stat-card" onclick="window.location.href='leave.html'">
+        <div class="stat-icon">🏖️</div>
+        <div class="stat-val" id="statLeave" style="color:var(--accent);">--</div>
+        <div class="stat-label">特休餘額 (天)</div>
       </div>
     </div>
 
@@ -569,6 +610,9 @@ async function renderSchedule() {
 
     document.getElementById('scheduleList').innerHTML = rows;
 
+    // 統計只算本週
+    if (viewWeekStr === getCurrentWeekString()) renderStats(entry);
+
   } catch (e) {
     renderEmpty('班表讀取失敗，請稍後再試');
     console.error(e);
@@ -581,6 +625,28 @@ function renderEmpty(msg) {
       <div class="no-schedule-icon">📭</div>
       <div>${msg}</div>
     </div>`;
+}
+
+function renderStats(entry) {
+  if (!user.store) return; // 全門市管理帳號不顯示
+  const row = document.getElementById('statsRow');
+  row.style.display = '';
+
+  if (!entry?.days) {
+    document.getElementById('statWeekH').textContent    = '0';
+    document.getElementById('statWeekDays').textContent = '0';
+    return;
+  }
+
+  let totalH = 0, workDays = 0;
+  for (const day of Object.values(entry.days)) {
+    if (day.shift && !isLeaveShift(day.shift)) {
+      workDays++;
+      totalH += day.hours ?? getShiftHours(day.shift, {});
+    }
+  }
+  document.getElementById('statWeekH').textContent    = totalH > 0 ? totalH : '0';
+  document.getElementById('statWeekDays').textContent = workDays;
 }
 
 // ===== 週次切換 =====
