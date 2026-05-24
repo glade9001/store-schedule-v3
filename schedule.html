@@ -10,6 +10,174 @@
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/common.css">
 <title>📅 班表查閱 — 莉學商行</title>
+<style>
+/* ===== SUB HEADER ===== */
+.sub-header {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.wk-btn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text);
+}
+.wk-label {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.now-btn {
+  background: #e8f0fe;
+  border: none;
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 32px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--primary);
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+/* ===== PUBLISH BADGE ===== */
+.pub-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.pub-badge.published   { background: #e8f5e9; color: #2e7d32; }
+.pub-badge.unpublished { background: #fff8e1; color: #7c4a00; }
+
+/* ===== SCHEDULE TABLE ===== */
+.sched-container {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.sched-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+.sched-table th,
+.sched-table td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sched-table th:first-child,
+.sched-table td:first-child { border-left: 1px solid var(--border); }
+.sched-table tr:first-child th { border-top: 1px solid var(--border); }
+
+.name-col {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  width: 68px;
+  min-width: 68px;
+}
+.sched-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  padding: 7px 2px;
+  white-space: nowrap;
+}
+.sched-table thead .name-col { z-index: 4; background: var(--primary-dark); font-size: 12px; padding: 7px 6px; }
+.today-head { background: #1565c0 !important; }
+.today-td   { background: #f0f7ff; }
+
+.emp-cell        { padding: 6px 6px; font-size: 12px; font-weight: 800; line-height: 1.3; }
+.emp-cell-role   { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+.emp-cell-stats  { font-size: 10px; color: var(--primary); font-weight: 700; margin-top: 2px; }
+
+/* my row highlight */
+.my-name-col   { background: #e8f0fe !important; }
+.my-row-td     { background: #f5f9ff; }
+.my-row-td.today-td { background: #dbeafe; }
+
+.sched-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  width: 80px;
+  min-width: 80px;
+  cursor: pointer;
+  padding: 4px 2px;
+  gap: 1px;
+  user-select: none;
+}
+.sched-cell:active { opacity: 0.65; }
+.sched-cell.empty-cell { cursor: default; }
+.s-shift { font-size: 12px; font-weight: 800; }
+.s-meta  { font-size: 10px; color: var(--text-muted); }
+.s-note  { font-size: 10px; color: var(--text-muted); max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-ot    { color: var(--danger); font-weight: 800; }
+
+.note-name-cell  { padding: 6px 6px; font-size: 11px; font-weight: 700; color: var(--text-muted); }
+.note-cell       { padding: 4px 3px; font-size: 11px; text-align: center; color: var(--text-muted); min-height: 54px; width: 80px; min-width: 80px; display: flex; align-items: center; justify-content: center; }
+
+/* ===== UNPUBLISHED NOTICE ===== */
+.unpub-notice {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 10px;
+  color: var(--text-muted);
+}
+.unpub-icon  { font-size: 48px; }
+.unpub-title { font-size: 17px; font-weight: 800; color: var(--text); }
+.unpub-sub   { font-size: 13px; text-align: center; line-height: 1.6; }
+
+/* admin preview banner */
+.admin-preview-bar {
+  background: #fff8e1;
+  border-top: 1px solid #ffe082;
+  text-align: center;
+  padding: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c4a00;
+  flex-shrink: 0;
+}
+
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; color: var(--text-muted); font-size: 14px; gap: 8px; }
+
+/* ===== DETAIL MODAL ===== */
+.detail-who    { font-size: 18px; font-weight: 900; margin-bottom: 2px; }
+.detail-when   { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+.detail-row    { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-label  { font-size: 12px; color: var(--text-muted); font-weight: 700; width: 52px; flex-shrink: 0; }
+.detail-value  { font-size: 14px; font-weight: 800; flex: 1; }
+.detail-close  { width: 100%; padding: 13px; background: #f1f5f9; color: var(--text); border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 14px; }
+</style>
 </head>
 <body>
 
@@ -19,29 +187,294 @@
 </div>
 
 <div id="appShell" hidden>
+
   <header class="top-header">
     <button class="btn-back" onclick="window.location.href='home.html'">← 首頁</button>
     <h1 class="header-title">📅 班表查閱</h1>
+    <div class="header-badge" id="storeBadge"></div>
+    <button id="editBtn" style="display:none;background:#e8f0fe;border:none;border-radius:8px;padding:0 10px;height:30px;font-size:11px;font-weight:800;cursor:pointer;color:var(--primary);font-family:inherit;" onclick="goEdit()">✏️ 編輯</button>
   </header>
 
-  <div class="maintenance-wrap">
-    <div class="maintenance-icon">📅</div>
-    <h2 class="maintenance-title">功能開發中</h2>
-    <p class="maintenance-desc">此功能正在建置中，敬請期待。<br>完成後將自動上線。</p>
-    <button class="btn-primary" style="max-width:200px;" onclick="window.location.href='home.html'">返回首頁</button>
+  <div class="store-tabs" id="storeTabs" style="display:none;"></div>
+
+  <div class="sub-header">
+    <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
+    <div class="wk-label" id="weekLabel">—</div>
+    <button class="wk-btn" onclick="changeWeek(1)">›</button>
+    <button class="now-btn" onclick="goToCurrentWeek()">本週</button>
+    <span class="pub-badge" id="pubBadge">—</span>
+  </div>
+
+  <div class="admin-preview-bar" id="adminPreviewBar" style="display:none;">
+    ⚠️ 此週班表尚未發布，員工目前無法查看
+  </div>
+
+  <!-- Unpublished notice (for employees) -->
+  <div class="unpub-notice" id="unpubNotice" style="display:none;">
+    <div class="unpub-icon">🔒</div>
+    <div class="unpub-title">班表尚未發布</div>
+    <div class="unpub-sub">此週班表尚未由店長發布<br>請稍後再查看</div>
+  </div>
+
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div style="font-size:40px;">👥</div>
+    <div>此門市尚無在職員工</div>
+  </div>
+
+  <div class="sched-container" id="schedContainer" style="display:none;">
+    <table class="sched-table" id="schedTable"></table>
+  </div>
+
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeDetail()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="detail-who"  id="detailWho"></div>
+    <div class="detail-when" id="detailWhen"></div>
+    <div id="detailRows"></div>
+    <button class="detail-close" onclick="closeDetail()">關閉</button>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script type="module">
-import { requireAuth } from './js/auth.js';
-import { hideLoading } from './js/utils.js';
-(async () => {
-  await requireAuth();
-  document.getElementById('appShell').removeAttribute('hidden');
+import { requireAuth, canSchedule, isMultiStore } from './js/auth.js';
+import { getAppConfig, getStoreUsers, getWeekMeta, getAllWeekEntries, getStoreConfig } from './js/db.js';
+import {
+  getCurrentWeekString, getWeekDates, getWeekMonday, dateToISOWeek,
+  DAY_NAMES, formatDate, showLoading, hideLoading, showToast, openModal, closeModal,
+} from './js/utils.js';
+import { getShiftHours, isLeaveShift, shiftClass, calcWeekStats } from './js/schedule-utils.js';
+
+// ===== STATE =====
+let user, appConfig = {}, shiftCfg = { shifts: [], shiftHours: {} };
+let currentStore = '', currentWeek = '';
+let employees = [], scheduleData = {}, weekMeta = null, weekNotes = {};
+let isAdmin = false;
+
+// ===== BOOT =====
+user = await requireAuth();
+isAdmin = canSchedule(user);
+
+showLoading('載入設定中...');
+appConfig = await getAppConfig().catch(() => ({}));
+currentStore = user.store || (appConfig.stores || [])[0] || '';
+currentWeek  = getCurrentWeekString();
+
+if (isAdmin) document.getElementById('editBtn').style.display = '';
+initStoreTabs();
+
+await fetchAndRender();
+hideLoading();
+document.getElementById('appShell').removeAttribute('hidden');
+
+// ===== STORE TABS =====
+function initStoreTabs() {
+  if (!isMultiStore(user)) return;
+  const bar = document.getElementById('storeTabs');
+  bar.style.display = 'flex';
+  bar.innerHTML = (appConfig.stores || []).map(s =>
+    `<button class="store-tab${s===currentStore?' active':''}" onclick="switchStore('${s}')">${s}</button>`
+  ).join('');
+}
+
+window.switchStore = async s => {
+  currentStore = s;
+  document.querySelectorAll('.store-tab').forEach(b => b.classList.toggle('active', b.textContent === s));
+  await fetchAndRender();
+};
+
+// ===== FETCH =====
+async function fetchAndRender() {
+  showLoading('讀取班表...');
+  try {
+    const [emps, entries, meta, cfg] = await Promise.all([
+      getStoreUsers(currentStore),
+      getAllWeekEntries(currentStore, currentWeek),
+      getWeekMeta(currentStore, currentWeek),
+      getStoreConfig(currentStore, 'shifts'),
+    ]);
+
+    employees = emps.sort((a, b) => (a.sortKey || 99) - (b.sortKey || 99));
+    shiftCfg  = cfg || { shifts: appConfig.shifts || [], shiftHours: appConfig.shiftHours || {} };
+    weekMeta  = meta || { published: false };
+    weekNotes = weekMeta.notes || {};
+
+    scheduleData = {};
+    employees.forEach(e => { scheduleData[e.uid] = { days: {} }; });
+    entries.forEach(e => { if (scheduleData[e.uid]) scheduleData[e.uid] = { days: e.days || {} }; });
+
+    renderWeekLabel();
+    renderContent();
+  } catch (e) {
+    showToast('❌ 讀取失敗：' + e.message);
+    console.error(e);
+  }
   hideLoading();
-})();
+}
+
+// ===== RENDER =====
+function renderWeekLabel() {
+  const dates = getWeekDates(currentWeek);
+  const [, w] = currentWeek.split('-W');
+  const fmt = d => { const [, m, day] = d.split('-'); return `${+m}/${+day}`; };
+  document.getElementById('weekLabel').textContent  = `第${w}週 ${fmt(dates[0])}–${fmt(dates[6])}`;
+  document.getElementById('storeBadge').textContent = currentStore;
+
+  const badge = document.getElementById('pubBadge');
+  if (weekMeta?.published) {
+    badge.textContent = '✅ 已發布';
+    badge.className   = 'pub-badge published';
+  } else {
+    badge.textContent = '未發布';
+    badge.className   = 'pub-badge unpublished';
+  }
+}
+
+function renderContent() {
+  const published = weekMeta?.published;
+  const canView   = published || isAdmin;
+
+  document.getElementById('adminPreviewBar').style.display = (!published && isAdmin) ? 'block' : 'none';
+  document.getElementById('unpubNotice').style.display     = (!published && !isAdmin) ? 'flex' : 'none';
+  document.getElementById('schedContainer').style.display  = canView ? 'block' : 'none';
+  document.getElementById('emptyState').style.display      = 'none';
+
+  if (!canView) return;
+
+  if (!employees.length) {
+    document.getElementById('schedContainer').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'flex';
+    return;
+  }
+
+  renderTable();
+}
+
+function renderTable() {
+  const dates    = getWeekDates(currentWeek);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const fmt = d => { const [, m, day] = d.split('-'); return `${+m}/${+day}`; };
+
+  let html = '<thead><tr>';
+  html += `<th class="name-col">員工</th>`;
+  dates.forEach((d, i) => {
+    const isT = d === todayStr;
+    html += `<th${isT ? ' class="today-head"' : ''} style="min-width:80px;">${DAY_NAMES[i]}<br>${fmt(d)}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  employees.forEach(emp => {
+    const isMe  = emp.uid === user.uid;
+    const name  = emp.empName || emp.empId || '—';
+    const entry = scheduleData[emp.uid] || { days: {} };
+    const stats = calcWeekStats(entry, shiftCfg.shiftHours);
+    const statsStr = stats.workHours
+      ? `${stats.workHours}h${stats.offDays ? `・${stats.offDays}休` : ''}${stats.overtimeHours ? `・OT${stats.overtimeHours}h` : ''}`
+      : '';
+
+    html += `<tr>`;
+    html += `<td class="name-col${isMe ? ' my-name-col' : ''}">
+      <div class="emp-cell">
+        ${name}
+        <div class="emp-cell-role">${emp.role || ''}</div>
+        ${statsStr ? `<div class="emp-cell-stats">${statsStr}</div>` : ''}
+      </div>
+    </td>`;
+
+    dates.forEach(d => {
+      const isT   = d === todayStr;
+      const day   = entry.days[d] || {};
+      const shift = day.shift || '';
+      const hours = day.hours ?? (shift && !isLeaveShift(shift) ? getShiftHours(shift, shiftCfg.shiftHours) : 0);
+      const sc    = shiftClass(shift);
+
+      const tdCls = [isT ? 'today-td' : '', isMe ? 'my-row-td' : ''].filter(Boolean).join(' ');
+      const cellCls = ['sched-cell', shift ? '' : 'empty-cell'].filter(Boolean).join(' ');
+      const clickAttr = shift ? `onclick="showDetail('${emp.uid}','${d}')"` : '';
+
+      html += `<td${tdCls ? ` class="${tdCls}"` : ''}>
+        <div class="${cellCls}" ${clickAttr}>
+          <span class="s-shift ${sc}">${shift || '—'}</span>
+          ${shift && !isLeaveShift(shift) && hours ? `<span class="s-meta">${hours}h${day.isOT ? ' <span class="s-ot">OT</span>' : ''}</span>` : ''}
+          ${day.note ? `<span class="s-note">${day.note}</span>` : ''}
+        </div>
+      </td>`;
+    });
+    html += '</tr>';
+  });
+
+  // Notes row
+  const hasNotes = Object.values(weekNotes).some(v => v);
+  if (hasNotes) {
+    html += `<tr><td class="name-col"><div class="note-name-cell">備註</div></td>`;
+    dates.forEach(d => {
+      const isT = d === todayStr;
+      const val = weekNotes[d] || '';
+      html += `<td${isT ? ' class="today-td"' : ''}><div class="note-cell">${val}</div></td>`;
+    });
+    html += '</tr>';
+  }
+
+  html += '</tbody>';
+  document.getElementById('schedTable').innerHTML = html;
+}
+
+// ===== DETAIL POPUP =====
+window.showDetail = (uid, dateStr) => {
+  const emp   = employees.find(e => e.uid === uid);
+  const day   = (scheduleData[uid]?.days || {})[dateStr] || {};
+  const shift = day.shift || '';
+  const hours = day.hours ?? (shift && !isLeaveShift(shift) ? getShiftHours(shift, shiftCfg.shiftHours) : 0);
+  const dates = getWeekDates(currentWeek);
+  const di    = dates.indexOf(dateStr);
+  const [, m, d] = dateStr.split('-');
+
+  document.getElementById('detailWho').textContent  = emp?.empName || '—';
+  document.getElementById('detailWhen').textContent = `${DAY_NAMES[di]} ${+m}/${+d}`;
+
+  let rows = `
+    <div class="detail-row">
+      <span class="detail-label">班別</span>
+      <span class="detail-value ${shiftClass(shift)}">${shift || '（未排班）'}</span>
+    </div>`;
+  if (shift && !isLeaveShift(shift)) {
+    rows += `<div class="detail-row">
+      <span class="detail-label">工時</span>
+      <span class="detail-value">${hours}h${day.isOT ? ' <span class="s-ot">（加班）</span>' : ''}</span>
+    </div>`;
+  }
+  if (day.note) {
+    rows += `<div class="detail-row">
+      <span class="detail-label">備註</span>
+      <span class="detail-value" style="font-weight:600;font-size:13px;">${day.note}</span>
+    </div>`;
+  }
+  document.getElementById('detailRows').innerHTML = rows;
+  openModal('detailModal');
+};
+
+window.closeDetail = () => closeModal('detailModal');
+
+// ===== NAV =====
+window.changeWeek = async delta => {
+  const mon = getWeekMonday(currentWeek);
+  mon.setDate(mon.getDate() + delta * 7);
+  currentWeek = dateToISOWeek(mon);
+  await fetchAndRender();
+};
+
+window.goToCurrentWeek = async () => {
+  currentWeek = getCurrentWeekString();
+  await fetchAndRender();
+};
+
+window.goEdit = () => {
+  window.location.href = `schedule-admin.html`;
+};
 </script>
 </body>
 </html>
