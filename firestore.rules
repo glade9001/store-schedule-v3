@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 取得當前使用者資料
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myPerm() {
+      return userDoc().permission;
+    }
+
+    function isActive() {
+      return userDoc().status == '在職';
+    }
+
+    function isAdmin()   { return isSignedIn() && myPerm() == 'admin'; }
+    function isOwner()   { return isSignedIn() && myPerm() in ['admin', 'owner']; }
+    function isManager() { return isSignedIn() && myPerm() in ['admin', 'owner', 'manager']; }
+    function isEmployee(){ return isSignedIn() && isActive(); }
+
+    function myStore()   { return userDoc().store; }
+    function sameStore(store) { return myStore() == store; }
+
+    // ===== 使用者資料 =====
+    match /users/{uid} {
+      // 自己可以讀自己；管理層可以讀所有人
+      allow read: if isEmployee() && (request.auth.uid == uid || isManager());
+      // 只有管理層可以建立/修改；自己可以更新有限欄位
+      allow create: if isManager();
+      allow update: if isManager()
+        || (isEmployee() && request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['googleLinked']));
+      allow delete: if isAdmin();
+    }
+
+    // ===== 系統設定 =====
+    match /settings/{doc} {
+      allow read:  if isEmployee();
+      allow write: if isAdmin();
+    }
+    match /settings/config {
+      allow read:  if isEmployee();
+      allow write: if isManager();
+    }
+
+    // ===== 門市資料 =====
+    match /stores/{store}/{document=**} {
+      // 班表：同門市員工可讀（已發布），管理層可讀所有
+      allow read: if isEmployee() && (isManager() || sameStore(store));
+      // 班表寫入：同門市管理層
+      allow write: if isManager() && sameStore(store);
+    }
+
+    // ===== 待辦事項 =====
+    match /todos/{id} {
+      allow read:  if isEmployee();
+      allow write: if isManager();
+    }
+    match /todoChecks/{id} {
+      allow read:  if isEmployee();
+      // 只能寫自己的 check（todoId_uid 格式）
+      allow write: if isEmployee()
+        && id.matches('.*_' + request.auth.uid);
+    }
+
+    // ===== 個人假期資料 =====
+    match /users/{uid}/leaveBalance/{doc} {
+      allow read:  if isEmployee() && (request.auth.uid == uid || isManager());
+      allow write: if isManager();
+    }
+    match /users/{uid}/leaveTransactions/{txId} {
+      allow read:  if isEmployee() && (request.auth.uid == uid || isManager());
+      allow write: if isManager();
+    }
+  }
+}

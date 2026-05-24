@@ -4,12 +4,12 @@ import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebas
 
 // 替換成新 Firebase 專案的設定（正式上線前更新）
 export const firebaseConfig = {
-  apiKey: "AIzaSyAmVwq-Wny1KMRGNSdOnBEJ_A-3HmTO-hM",
-  authDomain: "store-schedule-3b056.firebaseapp.com",
-  projectId: "store-schedule-3b056",
-  storageBucket: "store-schedule-3b056.firebasestorage.app",
-  messagingSenderId: "296522693619",
-  appId: "1:296522693619:web:f90ec5d666c7a4a5943086"
+  apiKey: "AIzaSyDmhjjYlls1Wd7d5YOVg7dVqkKcrxxJ1Tg",
+  authDomain: "store-schedule-v3.firebaseapp.com",
+  projectId: "store-schedule-v3",
+  storageBucket: "store-schedule-v3.firebasestorage.app",
+  messagingSenderId: "187494256104",
+  appId: "1:187494256104:web:3de5dc21d4bb26ed9ae85d"
 };
 
 const app = initializeApp(firebaseConfig);
