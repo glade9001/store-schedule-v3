@@ -1,4 +1,4 @@
-const CACHE = 'lixue-v3-static-v2';
+const CACHE = 'lixue-v3-static-v3';
 
 const STATIC = [
   '/store-schedule-v3/css/common.css',
