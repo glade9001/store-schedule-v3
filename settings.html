@@ -505,6 +505,37 @@ const DEFAULT_SHIFTS = ['7-15', '15-23', '23-07', '18-23'];
 const DEFAULT_HOURS  = { '7-15': 8, '15-23': 8, '23-07': 8, '18-23': 5 };
 const DEFAULT_NOTES  = ['作帳', '訂鮮食', '訂捷盟', '訂乳品18度C'];
 
+const TAIWAN_HOLIDAYS = {
+  2026: {
+    '2026-01-01': '元旦',
+    '2026-02-16': '農曆除夕',
+    '2026-02-17': '春節初一',
+    '2026-02-18': '春節初二',
+    '2026-02-19': '春節初三',
+    '2026-02-28': '和平紀念日',
+    '2026-04-04': '兒童節',
+    '2026-04-05': '清明節',
+    '2026-05-01': '勞動節',
+    '2026-06-19': '端午節',
+    '2026-09-25': '中秋節',
+    '2026-10-10': '國慶日',
+  },
+  2027: {
+    '2027-01-01': '元旦',
+    '2027-02-05': '農曆除夕',
+    '2027-02-06': '春節初一',
+    '2027-02-07': '春節初二',
+    '2027-02-08': '春節初三',
+    '2027-02-28': '和平紀念日',
+    '2027-04-04': '兒童節',
+    '2027-04-05': '清明節',
+    '2027-05-01': '勞動節',
+    '2027-06-09': '端午節',
+    '2027-09-15': '中秋節',
+    '2027-10-10': '國慶日',
+  },
+};
+
 // ===== Init =====
 user = await requireAuth('login.html');
 
@@ -738,9 +769,15 @@ window.selectYear = async y => {
 
 async function loadHolidays() {
   try {
-    const snap  = await getDoc(doc(db, 'settings', 'holidays', String(holidayYear)));
-    holidayDates = snap.exists() ? (snap.data().dates || {}) : {};
-  } catch { holidayDates = {}; }
+    const snap = await getDoc(doc(db, 'settings', 'holidays', String(holidayYear)));
+    if (snap.exists() && snap.data().dates && Object.keys(snap.data().dates).length > 0) {
+      holidayDates = snap.data().dates;
+    } else {
+      holidayDates = TAIWAN_HOLIDAYS[holidayYear] ? { ...TAIWAN_HOLIDAYS[holidayYear] } : {};
+    }
+  } catch {
+    holidayDates = TAIWAN_HOLIDAYS[holidayYear] ? { ...TAIWAN_HOLIDAYS[holidayYear] } : {};
+  }
   renderHolidayList();
 }
 
