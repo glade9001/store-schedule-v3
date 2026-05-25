@@ -515,7 +515,9 @@ document.getElementById('profileSub').textContent  = [user.role, user.store].fil
 updateGoogleStatus();
 
 appConfig = await getAppConfig();
-const stores = appConfig.stores || [];
+// 舊版資料可能是純字串陣列，統一轉成 {id, name} 物件
+appConfig.stores = (appConfig.stores || []).map(s => typeof s === 'string' ? { id: s, name: s } : s);
+const stores = appConfig.stores;
 
 if (canManageEmployee(user)) {
   document.getElementById('shiftSection').style.display = '';
