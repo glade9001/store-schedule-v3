@@ -228,33 +228,6 @@ body { overflow-y: auto; height: auto; }
   border-color: var(--primary);
 }
 
-/* quota grid */
-.quota-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  padding: 14px 16px;
-}
-.quota-item label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.quota-item input {
-  width: 100%;
-  height: 38px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 0 10px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-.quota-item input:focus { border-color: var(--primary); }
-
 /* holiday */
 .year-tabs {
   display: flex;
@@ -413,16 +386,6 @@ body { overflow-y: auto; height: auto; }
           <button class="btn-sm primary" onclick="addNote()">新增</button>
         </div>
 
-        <div class="subsection-hd">年度特休額度（天）</div>
-        <div class="quota-grid">
-          <div class="quota-item"><label>未滿 6 個月</label><input type="number" id="quotaLt6" min="0" max="30"></div>
-          <div class="quota-item"><label>滿 6 個月</label><input type="number" id="quota6m" min="0" max="30"></div>
-          <div class="quota-item"><label>滿 1 年</label><input type="number" id="quota1y" min="0" max="30"></div>
-          <div class="quota-item"><label>滿 2 年</label><input type="number" id="quota2y" min="0" max="30"></div>
-          <div class="quota-item"><label>滿 3 年</label><input type="number" id="quota3y" min="0" max="30"></div>
-          <div class="quota-item"><label>滿 5 年</label><input type="number" id="quota5y" min="0" max="30"></div>
-        </div>
-
         <div class="save-bar">
           <button class="btn-sm gray" onclick="loadShiftConfig()">還原</button>
           <button class="btn-sm primary" onclick="saveShiftConfig()">儲存班別設定</button>
@@ -508,31 +471,39 @@ const DEFAULT_NOTES  = ['作帳', '訂鮮食', '訂捷盟', '訂乳品18度C'];
 const TAIWAN_HOLIDAYS = {
   2026: {
     '2026-01-01': '元旦',
+    '2026-02-15': '小年夜',
     '2026-02-16': '農曆除夕',
     '2026-02-17': '春節初一',
     '2026-02-18': '春節初二',
     '2026-02-19': '春節初三',
     '2026-02-28': '和平紀念日',
     '2026-04-04': '兒童節',
-    '2026-04-05': '清明節',
+    '2026-04-05': '民族掃墓節（清明節）',
     '2026-05-01': '勞動節',
     '2026-06-19': '端午節',
     '2026-09-25': '中秋節',
+    '2026-09-28': '孔子誕辰紀念日（教師節）',
     '2026-10-10': '國慶日',
+    '2026-10-25': '臺灣光復節',
+    '2026-12-25': '行憲紀念日',
   },
   2027: {
     '2027-01-01': '元旦',
+    '2027-02-04': '小年夜',
     '2027-02-05': '農曆除夕',
     '2027-02-06': '春節初一',
     '2027-02-07': '春節初二',
     '2027-02-08': '春節初三',
     '2027-02-28': '和平紀念日',
     '2027-04-04': '兒童節',
-    '2027-04-05': '清明節',
+    '2027-04-05': '民族掃墓節（清明節）',
     '2027-05-01': '勞動節',
     '2027-06-09': '端午節',
     '2027-09-15': '中秋節',
+    '2027-09-28': '孔子誕辰紀念日（教師節）',
     '2027-10-10': '國慶日',
+    '2027-10-25': '臺灣光復節',
+    '2027-12-25': '行憲紀念日',
   },
 };
 
@@ -669,11 +640,9 @@ async function loadShiftConfig() {
     shifts:     data?.shifts     || [...DEFAULT_SHIFTS],
     shiftHours: data?.shiftHours || { ...DEFAULT_HOURS },
     quickNotes: data?.quickNotes || [...DEFAULT_NOTES],
-    leaveQuota: data?.leaveQuota || { lt6: 0, m6: 3, y1: 7, y2: 10, y3: 14, y5: 15 },
   };
   renderShiftTags();
   renderNoteTags();
-  renderQuota();
 }
 window.loadShiftConfig = loadShiftConfig;
 
@@ -724,26 +693,8 @@ window.addNote = () => {
   renderNoteTags();
 };
 
-function renderQuota() {
-  const q = shiftConfig.leaveQuota;
-  document.getElementById('quotaLt6').value = q.lt6 ?? 0;
-  document.getElementById('quota6m').value  = q.m6  ?? 3;
-  document.getElementById('quota1y').value  = q.y1  ?? 7;
-  document.getElementById('quota2y').value  = q.y2  ?? 10;
-  document.getElementById('quota3y').value  = q.y3  ?? 14;
-  document.getElementById('quota5y').value  = q.y5  ?? 15;
-}
-
 window.saveShiftConfig = async () => {
   if (!currentShiftStore) return;
-  shiftConfig.leaveQuota = {
-    lt6: parseInt(document.getElementById('quotaLt6').value) || 0,
-    m6:  parseInt(document.getElementById('quota6m').value)  || 3,
-    y1:  parseInt(document.getElementById('quota1y').value)  || 7,
-    y2:  parseInt(document.getElementById('quota2y').value)  || 10,
-    y3:  parseInt(document.getElementById('quota3y').value)  || 14,
-    y5:  parseInt(document.getElementById('quota5y').value)  || 15,
-  };
   try {
     await saveStoreConfig(currentShiftStore, 'shifts', shiftConfig);
     showToast('✅ 班別設定已儲存');
